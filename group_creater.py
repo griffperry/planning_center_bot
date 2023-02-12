@@ -34,11 +34,11 @@ class PlanningCenterBot():
         else:
             print("[+] Login successful")
     
-    def create_group(self, group):
-        self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
-        self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
-        self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
-        # create rest of group data
+    def group_init(self, group):
+        self.create_group(group)
+        self.add_leader_to_group(group.get("leader"))
+        # self.add_co_leader_to_group(group.get("co-leader"))
+        # self.apply_group_settings(group)
         self.return_out_to_main_groups_page()
 
     def go_to_main_groups_page(self):
@@ -47,6 +47,21 @@ class PlanningCenterBot():
 
     def return_out_to_main_groups_page(self):
         self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
+
+    def create_group(self, group):
+        self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
+        self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
+        self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
+
+    def add_leader_to_group(self, member):
+        add_member_xpath = "/html/body/main/div/div/div[2]/div/div/div/div[3]/div[2]/div/div"
+        self.click_button(By.XPATH, add_member_xpath)
+        self.add_text_to_field(By.ID, "person_search", member)
+        sleep(3) # Wait for search to complete
+        select_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
+        self.click_button(By.XPATH, select_member_xpath)
+        self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]/span")
+        # Still have to make leader
 
     def click_button(self, by_type, xpath):
         self.driver.find_element(by_type, xpath).click()
@@ -73,6 +88,8 @@ def main():
     groups = {
         1: {
             "name": "test bot 1",
+            "leader": "Griff Perry",
+            "co-leader": None,
             "type": "small groups",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -91,6 +108,8 @@ def main():
         },
         2: {
             "name": "test bot 2",
+            "leader": "Griff Perry",
+            "co-leader": None,
             "type": "small groups",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -113,7 +132,7 @@ def main():
         try:
             bot.go_to_main_groups_page()
             for group in groups.values():
-                bot.create_group(group)
+                bot.group_init(group)
                 print(f"Group '{group['name']}' created.")
         except Exception as error:
             trace_back_str = traceback.format_exc()
