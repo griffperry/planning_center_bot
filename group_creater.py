@@ -35,10 +35,6 @@ class PlanningCenterBot():
             print("[+] Login successful")
     
     def create_group(self, group):
-        try:
-            self.go_to_main_groups_page()
-        except Exception:
-            print("Back to groups page.")
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
         self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
@@ -115,6 +111,7 @@ def main():
 
     if bot.driver:
         try:
+            bot.go_to_main_groups_page()
             for group in groups.values():
                 bot.create_group(group)
                 print(f"Group '{group['name']}' created.")
