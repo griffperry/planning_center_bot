@@ -3,11 +3,12 @@
 import argparse
 import sys
 import traceback
+import time
+from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-from time import sleep
 
 
 class PlanningCenterBot():
@@ -61,7 +62,7 @@ class PlanningCenterBot():
             self.promote_member_to_leader(group, member)
 
     def search_and_add_member(self, member):
-        print(f"Search for {member}")
+        # print(f"Search for {member}")
         self.add_text_to_field(By.ID, "person_search", member)
         second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
         found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
@@ -120,7 +121,7 @@ class PlanningCenterBot():
         if email:
             self.add_text_to_field(By.ID, "group_contact_email", email)
             self.add_text_to_field(By.ID, "group_contact_email", Keys.ENTER)
-            sleep(self.wait)
+            time.sleep(self.wait)
 
     def go_to_main_groups_page(self):
         self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
@@ -133,7 +134,7 @@ class PlanningCenterBot():
         button = self.attempt_find_element(by_type, xpath)
         if button:
             button.click()
-            sleep(self.wait)
+            time.sleep(self.wait)
             return True
         else:
             print(f"Could not find button at {xpath}")
@@ -159,8 +160,7 @@ class PlanningCenterBot():
                 break
             except Exception:
                 tries += 1
-                # print(f"Tries = {tries}")
-                sleep(sleep_time)
+                time.sleep(sleep_time)
         return element
 
     def close_session(self):
@@ -175,7 +175,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-    bot = PlanningCenterBot(args.email, args.password)
+
     # groups = get_groups(args.groups_file)
     # Read in excel file, build groups dict
     groups = {
@@ -238,19 +238,34 @@ def main():
         },
     }
 
-    if bot.driver:
-        try:
-            bot.go_to_main_groups_page()
-            for group in groups.values():
+    def setup_workers():
+        return PlanningCenterBot(args.email, args.password)
+
+    def init_process(bot, group):
+        if bot.driver:
+            try:
+                bot.go_to_main_groups_page()
+                # for group in groups.values():
                 bot.group_init(group)
                 print(f"Group '{group['name']}' created.")
-        except Exception as error:
-            trace_back_str = traceback.format_exc()
-            print(trace_back_str)
-            sys.exit(1)
-        finally:
-            if bot:
-                bot.close_session()
+            except Exception as error:
+                trace_back_str = traceback.format_exc()
+                print(trace_back_str)
+                sys.exit(1)
+            finally:
+                if bot:
+                    bot.close_session()
+
+    start_time = time.time()
+    bots = [ setup_workers() for _ in range(len(groups)) ]
+    total_time = time.time() - start_time
+    print(f"Registered sessions in {total_time} seconds\n")
+
+    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=len(groups)) as executor:
+        executor.map(init_process, bots, groups.values())
+    total_time = time.time() - start_time
+    print(f"Created all groups in {total_time} seconds")
 
 if __name__ == "__main__":
     main()
