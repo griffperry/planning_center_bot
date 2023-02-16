@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse
 import sys
 import traceback
 import time
+from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -189,16 +189,9 @@ class PlanningCenterBot():
         print("Closing session")
         self.driver.close()
 
-def parse_args():
-    parser = argparse.ArgumentParser(description='Provide email and pw')
-    parser.add_argument('email')
-    parser.add_argument('password')
-    parser.add_argument('delete_on_end')
-    parser.add_argument('demo_flag', nargs='?', default=None)
-    return parser.parse_args()
 
-def setup_worker(args):
-    bot = PlanningCenterBot(args.email, args.password, args.demo_flag)
+def setup_worker(email, password, demo):
+    bot = PlanningCenterBot(email, password, demo)
     bot.go_to_main_groups_page()
     return bot
 
@@ -221,9 +214,9 @@ def delete_group(bot, group):
             print(trace_back_str)
             sys.exit(1)
 
-def register_sessions(args, bot_count):
+def register_sessions(bot_count, email, password, demo):
     start_time = time.time()
-    bots = [ setup_worker(args) for _ in range(bot_count) ]
+    bots = [ setup_worker(email, password, demo) for _ in range(bot_count) ]
     total_time = time.time() - start_time
     print(f"Registered sessions in {total_time} seconds\n")
     return bots
@@ -238,9 +231,9 @@ def init_process(bot_count, bots, groups):
     total_time = time.time() - start_time
     print(f"Created all groups in {total_time} seconds")
 
-def delete_groups(groups, args):
+def delete_groups(groups, email, password, demo):
     start_time = time.time()
-    bot = setup_worker(args)
+    bot = setup_worker(email, password, demo)
     try:
         for group in groups:
             delete_group(bot, group)
@@ -252,13 +245,11 @@ def delete_groups(groups, args):
 
 def main():
     bot_count = 2
-    args = parse_args()
 
-    # groups = get_groups(args.groups_file)
-    # Read in excel file, build groups dict
+    # groups = get_groups(groups_file) # Read in excel file, build groups dict
     groups = {
         1: {
-            "name": "test bot 1",
+            "name": "test group 1",
             "leader": "Griff Perry",
             "co-leader": "Josh Smith",
             # "co-leader": None,
@@ -278,7 +269,7 @@ def main():
             },
         },
         2: {
-            "name": "test bot 2",
+            "name": "test group 2",
             "leader": "Griff Perry",
             "co-leader": "Kaylee Perry",
             "schedule": "Thursday @ 11:30 AM Weekly",
@@ -297,8 +288,9 @@ def main():
             },
         },
         3: {
-            "name": "test bot 3",
+            "name": "test group 3",
             "leader": "Griff Perry",
+            # "leader": "Mike Fitzgerald",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
@@ -316,7 +308,7 @@ def main():
             },
         },
         4: {
-            "name": "test bot 4",
+            "name": "test group 4",
             "leader": "Griff Perry",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
@@ -335,7 +327,7 @@ def main():
             },
         },
         5: {
-            "name": "test bot 5",
+            "name": "test group 5",
             "leader": "Griff Perry",
             "co-leader": "Kaylee Perry",
             "schedule": "Thursday @ 11:30 AM Weekly",
@@ -354,7 +346,7 @@ def main():
             },
         },
         6: {
-            "name": "test bot 6",
+            "name": "test group 6",
             "leader": "Griff Perry",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
@@ -374,10 +366,16 @@ def main():
         },
     }
 
-    sessions = register_sessions(args, bot_count)
+    email = input("\nEmail: ")
+    password = getpass()
+    answer = input("Would you like to demo? [y/n]: ")
+    demo = True if "y" in answer else False
+
+    sessions = register_sessions(bot_count, email, password, demo)
     init_process(bot_count, sessions, groups.values())
-    if args.delete_on_end == "delete_on_end":
-        delete_groups(groups.values(), args)
+    answer = input("Do you want to delete these groups? [y/n]: ")
+    if "y" in answer:
+        delete_groups(groups.values(), email, password, demo)
 
 if __name__ == "__main__":
     main()
