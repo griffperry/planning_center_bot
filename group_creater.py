@@ -13,6 +13,7 @@ from time import sleep
 class PlanningCenterBot():
 
     def __init__(self, email, password):
+        self.wait = 0.3
         options = Options()
         options.add_argument('-headless')
         self.driver = webdriver.Chrome(options=options)
@@ -119,7 +120,7 @@ class PlanningCenterBot():
         if email:
             self.add_text_to_field(By.ID, "group_contact_email", email)
             self.add_text_to_field(By.ID, "group_contact_email", Keys.ENTER)
-            sleep(0.5)
+            sleep(self.wait)
 
     def go_to_main_groups_page(self):
         self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
@@ -132,7 +133,7 @@ class PlanningCenterBot():
         button = self.attempt_find_element(by_type, xpath)
         if button:
             button.click()
-            sleep(0.5)
+            sleep(self.wait)
             return True
         else:
             print(f"Could not find button at {xpath}")
