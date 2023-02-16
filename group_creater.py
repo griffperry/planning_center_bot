@@ -6,6 +6,7 @@ import traceback
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 from time import sleep
 
 
@@ -36,50 +37,46 @@ class PlanningCenterBot():
     
     def group_init(self, group):
         self.create_group(group)
-        self.add_leader_to_group(group)
+        self.add_member_to_group(group, group["leader"])
         if group.get("co-leader"):
-            self.add_member_to_group(group, leader=True)
-        # self.add_group_settings(group)
+            self.add_member_to_group(group, group["co-leader"])
+        self.add_group_settings(group)
         self.return_out_to_main_groups_page()
-
-    def go_to_main_groups_page(self):
-        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
-        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
-
-    def return_out_to_main_groups_page(self):
-        self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
 
     def create_group(self, group):
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
         self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
 
-    def add_leader_to_group(self, group):
-        add_first_member_xpath = "/html/body/main/div/div/div[2]/div/div/div/div[3]/div[2]/div/div"
-        self.click_button(By.XPATH, add_first_member_xpath)
-        self.search_for_member(group["leader"])
-        self.promote_member_to_leader(group, group["leader"])
+    def add_member_to_group(self, group, member):
+        member_type = self.get_member_type(group, member)
+        if member_type == "leader":
+            add_member_xpath = "/html/body/main/div/div/div[2]/div/div/div/div[3]/div[2]/div/div"
+        else:
+            add_member_xpath = "//*[@id='group-member-finder']/div/div[3]/div[2]/div"
+        self.click_button(By.XPATH, add_member_xpath)
+        success = self.search_and_add_member(member)
+        if "leader" in member_type and success:
+            self.promote_member_to_leader(group, member)
 
-    def add_member_to_group(self, group, leader=False):
-        if leader:
-            # breakpoint()
-            self.click_button(By.XPATH, "//*[@id='group-member-finder']/div/div[3]/div[2]/div")
-            self.search_for_member(group["co-leader"])
-            self.promote_member_to_leader(group, group["co-leader"])
-
-    def search_for_member(self, member):
+    def search_and_add_member(self, member):
+        print(f"Search for {member}")
         self.add_text_to_field(By.ID, "person_search", member)
-        only_result_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
-        success = self.click_button(By.XPATH, only_result_xpath)
-        if not success:
+        second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
+        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
+        if found_second_member:
             # TODO: Use email to verify member when multiple members found.
             print(f"More than one result when searching for {member}")
-            return
+            self.click_button(By.XPATH, "/html/body/div[2]/div/div[1]/button") # Click X
+            return False
+        only_result_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
+        self.click_button(By.XPATH, only_result_xpath)
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
+        return True
 
     def promote_member_to_leader(self, group, member):
-        member_type = list(group.keys())[list(group.values()).index(member)]
+        member_type = self.get_member_type(group, member)
         if "leader" == member_type:
             promote_xpath = "//*[@id='group-member-finder']/div/div[5]/div[2]/div/div[5]/div/div"
         elif "co-leader" == member_type:
@@ -91,8 +88,45 @@ class PlanningCenterBot():
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
 
+    def get_member_type(self, group, member):
+        return list(group.keys())[list(group.values()).index(member)]
+
     def dont_notify_by_email(self):
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[2]/form/div/label")
+
+    def add_group_settings(self, group):
+        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
+        self.add_meeting_schedule(group.get("schedule"))
+        self.add_description(group.get("description"))
+        self.add_group_contact_email(group.get("contact_email"))
+        # self.add_group_location(group.get("location"))
+        # self.add_group_tags(group.get("tags"))
+
+    def add_meeting_schedule(self, schedule):
+        if schedule:
+            self.add_text_to_field(By.ID, "group_schedule", schedule)
+            self.click_button(By.XPATH, "/html/body/main/div/div/section/section[1]/div/div[1]/div[2]/form[1]/div/div/div/div/a")
+
+    def add_description(self, description):
+        if description:
+            self.add_text_to_field(By.XPATH,
+                               "/html/body/main/div/div/section/section[2]/div[1]/div[2]/div/form/div/div/div/div[1]/trix-editor",
+                               description,
+                            )
+            self.click_button(By.XPATH, "/html/body/main/div/div/section/section[2]/div[1]/div[2]/div/form/div/div/div/div[2]/div/a")
+
+    def add_group_contact_email(self, email):
+        if email:
+            self.add_text_to_field(By.ID, "group_contact_email", email)
+            self.add_text_to_field(By.ID, "group_contact_email", Keys.ENTER)
+            sleep(0.5)
+
+    def go_to_main_groups_page(self):
+        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
+        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
+
+    def return_out_to_main_groups_page(self):
+        self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
 
     def click_button(self, by_type, xpath):
         button = self.attempt_find_element(by_type, xpath)
@@ -124,6 +158,7 @@ class PlanningCenterBot():
                 break
             except Exception:
                 tries += 1
+                # print(f"Tries = {tries}")
                 sleep(sleep_time)
         return element
 
@@ -146,11 +181,10 @@ def main():
         1: {
             "name": "test bot 1",
             "leader": "Griff Perry",
-            "co-leader": "Kaylee Perry",
-            "type": "small groups",
+            "co-leader": "Josh Smith",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
-            "contact email": "test@gmail.com",
+            "contact_email": "test@gmail.com",
             "location": "Perry Home",
             "tags": {
                 "campus": "Madison",
@@ -166,11 +200,29 @@ def main():
         2: {
             "name": "test bot 2",
             "leader": "Griff Perry",
-            "co-leader": None,
-            "type": "small groups",
+            "co-leader": "Kaylee Perry",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
-            "contact email": "test@gmail.com",
+            "contact_email": "lgp0008@auburn.edu",
+            "location": "Perry Home",
+            "tags": {
+                "campus": "Madison",
+                "year": "2023",
+                "season": "Winter/Spring",
+                "regularity": "Weekly",
+                "group type": "Prayer",
+                "group age": "All ages welcome",
+                "group members": "Men",
+                "day of week": "Thursday",
+            },
+        },
+        3: {
+            "name": "test bot 3",
+            "leader": "Griff Perry",
+            "co-leader": None,
+            "schedule": "Thursday @ 11:30 AM Weekly",
+            "description": "Test description",
+            "contact_email": "lgp0008@auburn.edu",
             "location": "Perry Home",
             "tags": {
                 "campus": "Madison",
