@@ -13,10 +13,11 @@ from selenium.webdriver.common.keys import Keys
 
 class PlanningCenterBot():
 
-    def __init__(self, email, password):
-        self.wait = 0.3
+    def __init__(self, email, password, demo):
+        self.wait = 0.5
         options = Options()
-        options.add_argument('-headless')
+        if not demo:
+            options.add_argument('-headless')
         self.driver = webdriver.Chrome(options=options)
         self.driver.get("https://login.planningcenteronline.com/login/new")
         self.add_text_to_field(By.ID, "email", email)
@@ -36,7 +37,24 @@ class PlanningCenterBot():
             self.driver = None
         else:
             print("[+] Login successful")
-    
+
+    def delete_test_group(self, name):
+        self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
+        self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", Keys.ENTER)
+        time.sleep(self.wait)
+        # handle when group isn't found
+        self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
+        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]") # go to settings tab
+        selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
+        if name == selected_group.text:
+            self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
+            self.click_button(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
+            self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")
+            self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", Keys.ENTER)
+            time.sleep(self.wait)
+        else:
+            print("Selected wrong group.")
+
     def group_init(self, group):
         self.create_group(group)
         self.add_member_to_group(group, group["leader"])
@@ -128,7 +146,11 @@ class PlanningCenterBot():
         self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
 
     def return_out_to_main_groups_page(self):
-        self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
+        success = self.attempt_find_element(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
+        if success:
+            self.click_button(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
+        else:
+            self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
 
     def click_button(self, by_type, xpath):
         button = self.attempt_find_element(by_type, xpath)
@@ -171,9 +193,65 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Provide email and pw')
     parser.add_argument('email')
     parser.add_argument('password')
+    parser.add_argument('delete_on_end')
+    parser.add_argument('demo_flag', nargs='?', default=None)
     return parser.parse_args()
 
+def setup_worker(args):
+    bot = PlanningCenterBot(args.email, args.password, args.demo_flag)
+    bot.go_to_main_groups_page()
+    return bot
+
+def handle_group_init(bot, group):
+    if bot.driver:
+        try:
+            bot.group_init(group)
+            print(f"Group '{group['name']}' created.")
+        except Exception as error:
+            trace_back_str = traceback.format_exc()
+            print(trace_back_str)
+            sys.exit(1)
+
+def delete_group(bot, group):
+    if bot.driver:
+        try:
+            bot.delete_test_group(group.get("name"))
+        except Exception as error:
+            trace_back_str = traceback.format_exc()
+            print(trace_back_str)
+            sys.exit(1)
+
+def register_sessions(args, bot_count):
+    start_time = time.time()
+    bots = [ setup_worker(args) for _ in range(bot_count) ]
+    total_time = time.time() - start_time
+    print(f"Registered sessions in {total_time} seconds\n")
+    return bots
+
+def init_process(bot_count, bots, groups):
+    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=bot_count) as executor:
+        bots *= int(len(groups)/bot_count)
+        executor.map(handle_group_init, bots, groups)
+    for bot in bots[:bot_count]:
+        bot.close_session()
+    total_time = time.time() - start_time
+    print(f"Created all groups in {total_time} seconds")
+
+def delete_groups(groups, args):
+    start_time = time.time()
+    bot = setup_worker(args)
+    try:
+        for group in groups:
+            delete_group(bot, group)
+    finally:
+        if bot:
+            bot.close_session()
+    total_time = time.time() - start_time
+    print(f"Deleted all groups in {total_time} seconds")
+
 def main():
+    bot_count = 2
     args = parse_args()
 
     # groups = get_groups(args.groups_file)
@@ -183,6 +261,7 @@ def main():
             "name": "test bot 1",
             "leader": "Griff Perry",
             "co-leader": "Josh Smith",
+            # "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
@@ -222,6 +301,63 @@ def main():
             "leader": "Griff Perry",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
+            "description": None,
+            "contact_email": None,
+            "location": "Perry Home",
+            "tags": {
+                "campus": "Madison",
+                "year": "2023",
+                "season": "Winter/Spring",
+                "regularity": "Weekly",
+                "group type": "Prayer",
+                "group age": "All ages welcome",
+                "group members": "Men",
+                "day of week": "Thursday",
+            },
+        },
+        4: {
+            "name": "test bot 4",
+            "leader": "Griff Perry",
+            "co-leader": None,
+            "schedule": "Thursday @ 11:30 AM Weekly",
+            "description": "Test description",
+            "contact_email": "test@gmail.com",
+            "location": "Perry Home",
+            "tags": {
+                "campus": "Madison",
+                "year": "2023",
+                "season": "Winter/Spring",
+                "regularity": "Weekly",
+                "group type": "Prayer",
+                "group age": "All ages welcome",
+                "group members": "Men",
+                "day of week": "Thursday",
+            },
+        },
+        5: {
+            "name": "test bot 5",
+            "leader": "Griff Perry",
+            "co-leader": "Kaylee Perry",
+            "schedule": "Thursday @ 11:30 AM Weekly",
+            "description": "Test description",
+            "contact_email": "lgp0008@auburn.edu",
+            "location": "Perry Home",
+            "tags": {
+                "campus": "Madison",
+                "year": "2023",
+                "season": "Winter/Spring",
+                "regularity": "Weekly",
+                "group type": "Prayer",
+                "group age": "All ages welcome",
+                "group members": "Men",
+                "day of week": "Thursday",
+            },
+        },
+        6: {
+            "name": "test bot 6",
+            "leader": "Griff Perry",
+            "co-leader": None,
+            "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
             "location": "Perry Home",
@@ -238,34 +374,10 @@ def main():
         },
     }
 
-    def setup_workers():
-        return PlanningCenterBot(args.email, args.password)
-
-    def init_process(bot, group):
-        if bot.driver:
-            try:
-                bot.go_to_main_groups_page()
-                # for group in groups.values():
-                bot.group_init(group)
-                print(f"Group '{group['name']}' created.")
-            except Exception as error:
-                trace_back_str = traceback.format_exc()
-                print(trace_back_str)
-                sys.exit(1)
-            finally:
-                if bot:
-                    bot.close_session()
-
-    start_time = time.time()
-    bots = [ setup_workers() for _ in range(len(groups)) ]
-    total_time = time.time() - start_time
-    print(f"Registered sessions in {total_time} seconds\n")
-
-    start_time = time.time()
-    with ThreadPoolExecutor(max_workers=len(groups)) as executor:
-        executor.map(init_process, bots, groups.values())
-    total_time = time.time() - start_time
-    print(f"Created all groups in {total_time} seconds")
+    sessions = register_sessions(args, bot_count)
+    init_process(bot_count, sessions, groups.values())
+    if args.delete_on_end == "delete_on_end":
+        delete_groups(groups.values(), args)
 
 if __name__ == "__main__":
     main()
