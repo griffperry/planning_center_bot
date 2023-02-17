@@ -1,3 +1,6 @@
+.PHONY: all
+all: install data groups clean
+
 .PHONY: install
 install:
 	pip install -U -r requirements.txt
