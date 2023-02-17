@@ -16,7 +16,7 @@ Create data in planning center
 Delete data
 `make clean`
 
-Build executable
+Build app
 `make executable`
 
 On Windows, make can be installed with

@@ -14,17 +14,21 @@ class GroupManager(PlanningCenterBot):
         self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
         self.hit_enter_on_element(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
         # handle when group isn't found
-        self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
-        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]") # go to settings tab
-        selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
-        if name == selected_group.text:
-            self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
-            self.click_button(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
-            self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")            
-            self.hit_enter_on_element(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
-            print(f"Deleted group '{name}'")
+        success = self.attempt_find_element(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
+        if success:
+            self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
+            self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]") # go to settings tab
+            selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
+            if name == selected_group.text:
+                self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
+                self.click_button(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
+                self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")            
+                self.hit_enter_on_element(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
+                print(f"Deleted group '{name}'")
+            else:
+                print("Selected wrong group.")
         else:
-            print("Selected wrong group.")
+            print(f"Search for group '{name}' failed.")
 
     def group_init(self, group):
         self.create_group(group)

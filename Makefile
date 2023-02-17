@@ -1,5 +1,5 @@
 .PHONY: all
-all: install data groups clean
+all: install data executable
 
 .PHONY: install
 install:
@@ -10,11 +10,11 @@ data:
 	echo "Gen Data"
 
 .PHONY: groups
-groups: 
+groups: install data
 	python .\small_groups_creator.py create_groups
 
 .PHONY: clean
-clean:
+clean: install
 	python .\small_groups_creator.py delete_groups
 
 .PHONY: executable

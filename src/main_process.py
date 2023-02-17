@@ -4,12 +4,13 @@ import time
 from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
 from src.group_manager import GroupManager
-# from data_generator import DataGenerator
+# from src.data_generator import DataGenerator
 
 
 def setup_worker(email, password, demo):
     bot = GroupManager(email, password, demo)
-    bot.go_to_main_groups_page()
+    if bot.driver:
+        bot.go_to_main_groups_page()
     return bot
 
 def handle_group_init(bot, group):
@@ -60,14 +61,10 @@ def delete_groups(groups, email, password, demo):
     total_time = time.time() - start_time
     print(f"Deleted all groups in {total_time} seconds")
 
-# def get_group_data():
-#     data = DataGenerator()
-#     return data
-
-def main_func():
-    # TODO: groups = get_group_data()
-    groups = {
-        1: {
+def get_group_data(num_groups):
+    # data = DataGenerator()
+    data = {
+        0: {
             "name": "test group 1",
             "leader": "Griff Perry",
             "co-leader": "Josh Smith",
@@ -87,7 +84,7 @@ def main_func():
                 "day of week": "Thursday",
             },
         },
-        2: {
+        1: {
             "name": "test group 2",
             "leader": "Griff Perry",
             "co-leader": "Kaylee Perry",
@@ -106,7 +103,7 @@ def main_func():
                 "day of week": "Thursday",
             },
         },
-        3: {
+        2: {
             "name": "test group 3",
             "leader": "Griff Perry",
             # "leader": "Mike Fitzgerald",
@@ -126,7 +123,7 @@ def main_func():
                 "day of week": "Thursday",
             },
         },
-        4: {
+        3: {
             "name": "test group 4",
             "leader": "Griff Perry",
             "co-leader": None,
@@ -145,7 +142,7 @@ def main_func():
                 "day of week": "Thursday",
             },
         },
-        5: {
+        4: {
             "name": "test group 5",
             "leader": "Griff Perry",
             "co-leader": "Kaylee Perry",
@@ -164,7 +161,7 @@ def main_func():
                 "day of week": "Thursday",
             },
         },
-        6: {
+        5: {
             "name": "test group 6",
             "leader": "Griff Perry",
             "co-leader": None,
@@ -185,15 +182,33 @@ def main_func():
         },
     }
 
+    groups = {}
+    for i in range(num_groups):
+        groups[i] = data[i]
+    return groups.values()
+
+def get_login_info():
     email = input("\nEmail: ")
     password = getpass()
     answer = input("Would you like to demo? [y/n]: ")
     demo = True if "y" in answer else False
+    return email, password, demo
 
-    command = sys.argv[-1]
-    if command == "delete_groups":
-        delete_groups(groups.values(), email, password, demo)
-    else:
-        bot_count = 2 if (len(groups) % 2) == 0 else 1
-        sessions = register_sessions(bot_count, email, password, demo)
-        run_threads(bot_count, sessions, groups.values())
+def main_func(email=None, password=None, demo=False, app_run=False):
+    groups = get_group_data(1)
+
+    if not app_run:
+        email, password, demo = get_login_info()
+
+    try:
+        command = sys.argv[-1]
+        if command == "create_groups" or app_run:
+            bot_count = 2 if (len(groups) % 2) == 0 else 1
+            sessions = register_sessions(bot_count, email, password, demo)
+            if sessions:
+                run_threads(bot_count, sessions, groups)
+        if command == "delete_groups" or app_run:
+            delete_groups(groups, email, password, demo)
+        return True
+    except Exception:
+        return False
