@@ -89,8 +89,8 @@ class GroupManager(PlanningCenterBot):
         self.add_meeting_schedule(group.get("schedule"))
         self.add_description(group.get("description"))
         self.add_group_contact_email(group.get("contact_email"))
-        # self.add_group_location(group.get("location"))
-        # self.add_group_tags(group.get("tags"))
+        # TODO: self.add_group_location(group.get("location"))
+        # TODO: self.add_group_tags(group.get("tags"))
 
     def add_meeting_schedule(self, schedule):
         if schedule:

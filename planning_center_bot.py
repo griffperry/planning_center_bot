@@ -11,6 +11,7 @@ class PlanningCenterBot():
         self.wait = 1.5
         options = Options()
         if not self.demo:
+            self.wait = 1
             options.add_argument('-headless')
         options.add_argument('log-level=3')
         self.driver = webdriver.Chrome(options=options)
