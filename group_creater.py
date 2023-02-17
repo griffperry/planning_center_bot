@@ -14,7 +14,7 @@ from selenium.webdriver.common.keys import Keys
 class PlanningCenterBot():
 
     def __init__(self, email, password, demo):
-        self.wait = 0.5
+        self.wait = 1.5
         options = Options()
         if not demo:
             options.add_argument('-headless')
