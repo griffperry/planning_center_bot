@@ -188,11 +188,14 @@ def main():
     answer = input("Would you like to demo? [y/n]: ")
     demo = True if "y" in answer else False
 
-    sessions = register_sessions(bot_count, email, password, demo)
-    run_threads(bot_count, sessions, groups.values())
-    answer = input("Do you want to delete these groups? [y/n]: ")
-    if "y" in answer:
+    command = sys.argv[1:]
+    if command == "create_groups":
+        sessions = register_sessions(bot_count, email, password, demo)
+        run_threads(bot_count, sessions, groups.values())
+    elif command == "delete_groups":
         delete_groups(groups.values(), email, password, demo)
+    else:
+        print("Invalid command line argument")
 
 if __name__ == "__main__":
     main()
