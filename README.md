@@ -15,3 +15,8 @@ Create data in planning center
 
 Delete data
 `make clean`
+
+On Windows, make can be installed with
+`choco install make`
+
+Choco must be installed on Powershell

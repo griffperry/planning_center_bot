@@ -188,7 +188,7 @@ def main():
     answer = input("Would you like to demo? [y/n]: ")
     demo = True if "y" in answer else False
 
-    command = sys.argv[1:]
+    command = sys.argv[-1]
     if command == "create_groups":
         sessions = register_sessions(bot_count, email, password, demo)
         run_threads(bot_count, sessions, groups.values())
