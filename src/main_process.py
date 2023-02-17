@@ -62,8 +62,8 @@ def delete_groups(groups, email, password, demo):
     print(f"Deleted all groups in {total_time} seconds")
 
 def main():
-    bot_count = 2
-    # groups = get_groups(groups_file) # Read in excel file, build groups dict
+    bot_count = 2 # TODO: Do we make the number of concurrent bots configurable?
+    # TODO: groups = get_groups(groups_file) # Read in excel file, build groups dict
     groups = {
         1: {
             "name": "test group 1",
