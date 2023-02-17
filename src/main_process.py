@@ -1,11 +1,9 @@
-#!/usr/bin/env python3
-
 import sys
 import traceback
 import time
 from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
-from group_manager import GroupManager
+from src.group_manager import GroupManager
 # from data_generator import DataGenerator
 
 
@@ -66,8 +64,7 @@ def delete_groups(groups, email, password, demo):
 #     data = DataGenerator()
 #     return data
 
-def main():
-    bot_count = 2 # TODO: Do we make the number of concurrent bots configurable?
+def main_func():
     # TODO: groups = get_group_data()
     groups = {
         1: {
@@ -194,13 +191,9 @@ def main():
     demo = True if "y" in answer else False
 
     command = sys.argv[-1]
-    if command == "create_groups":
-        sessions = register_sessions(bot_count, email, password, demo)
-        run_threads(bot_count, sessions, groups.values())
-    elif command == "delete_groups":
+    if command == "delete_groups":
         delete_groups(groups.values(), email, password, demo)
     else:
-        print("Invalid command line argument")
-
-if __name__ == "__main__":
-    main()
+        bot_count = 2 if (len(groups) % 2) == 0 else 1
+        sessions = register_sessions(bot_count, email, password, demo)
+        run_threads(bot_count, sessions, groups.values())

@@ -1,5 +1,5 @@
 import time
-from planning_center_bot import PlanningCenterBot
+from src.planning_center_bot import PlanningCenterBot
 from selenium.webdriver.common.by import By
 
 class GroupManager(PlanningCenterBot):

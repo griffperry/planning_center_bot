@@ -11,8 +11,13 @@ data:
 
 .PHONY: groups
 groups: 
-	python src/main_process.py create_groups
+	python .\small_groups_creator.py create_groups
 
 .PHONY: clean
 clean:
-	python src/main_process.py delete_groups
+	python .\small_groups_creator.py delete_groups
+
+.PHONY: executable
+executable:
+	pyinstaller --onefile .\small_groups_creator.py .\src\main_process.py .\src\group_manager.py .\src\planning_center_bot.py
+	echo "Executable located at ./dist/small_groups_creator.exe"
