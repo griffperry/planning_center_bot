@@ -8,8 +8,8 @@ data:
 
 .PHONY: groups
 groups: 
-	python main_process.py create_groups
+	python src/main_process.py create_groups
 
 .PHONY: clean
 clean:
-	python main_process.py delete_groups
+	python src/main_process.py delete_groups
