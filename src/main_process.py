@@ -39,11 +39,21 @@ def register_session(email, password, demo):
     print(f"Session ready in {total_time} seconds\n")
     return bot
 
-def run_threads(bot_count, bots, groups):
+def run_threads(bots, groups, command):
+    bot_count = len(bots)
+
+    if command == "create_groups":
+        func_ = handle_create_group
+    elif command == "delete_groups":
+        func_ = handle_delete_group
+    else:
+        print("Invalid command function.")
+        sys.exit(1)
+
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
         bots *= int(len(groups)/bot_count)
-        executor.map(handle_create_group, bots, groups)
+        executor.map(func_, bots, groups)
     for bot in bots[:bot_count]:
         bot.close_session()
     total_time = time.time() - start_time
@@ -207,7 +217,7 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             if bot_count > 1:
                 sessions.append(register_session(email, password, demo))
             if sessions:
-                run_threads(bot_count, sessions, groups)
+                run_threads(sessions, groups, command)
         if command == "delete_groups" or app_run:
             delete_groups(groups, email, password, demo)
         return True
