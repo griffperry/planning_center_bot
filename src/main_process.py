@@ -36,7 +36,7 @@ def register_session(email, password, demo):
     start_time = time.time()
     bot = setup_worker(email, password, demo)
     total_time = time.time() - start_time
-    print(f"Registered sessions in {total_time} seconds\n")
+    print(f"Session ready in {total_time} seconds\n")
     return bot
 
 def run_threads(bot_count, bots, groups):
@@ -68,7 +68,6 @@ def get_group_data(num_groups):
             "name": "test group 1",
             "leader": "Griff Perry",
             "co-leader": "Josh Smith",
-            # "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
@@ -86,8 +85,8 @@ def get_group_data(num_groups):
         },
         1: {
             "name": "test group 2",
-            "leader": "Griff Perry",
-            "co-leader": "Kaylee Perry",
+            "leader": "Alex Springer",
+            "co-leader": "Griff Perry",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
@@ -106,7 +105,6 @@ def get_group_data(num_groups):
         2: {
             "name": "test group 3",
             "leader": "Griff Perry",
-            # "leader": "Mike Fitzgerald",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
