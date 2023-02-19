@@ -40,11 +40,18 @@ def register_session(email, password, demo):
     return bot
 
 def register_sessions(bot_count, email, password, demo):
-    sessions = []
-    sessions.append(register_session(email, password, demo))
-    if bot_count > 1:
-        sessions.append(register_session(email, password, demo))
+    sessions = [ register_session(email, password, demo) for _ in range(bot_count) ]
     return sessions
+
+def gen_bots_list(bots, groups):
+    bot_count = len(bots)
+    if bot_count < 1:
+        print("Error: no bots to run with.")
+        sys.exit(1)
+    bots *= int(len(groups)/bot_count)
+    if (len(groups) % 2) == 1:
+        bots.append(bots[0])
+    return bots
 
 def run_threads(bots, groups, command):
     bot_count = len(bots)
@@ -206,14 +213,14 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             print("Invalid function command.")
             sys.exit(1)
 
-        bot_count = 2 if (len(groups) % 2) == 0 else 1
+        bot_count = 1 if len(groups) == 1 else 2
         sessions = register_sessions(bot_count, email, password, demo)
-        if sessions:
+        if len(sessions) > 0:
             run_threads(sessions, groups, command)
 
         if app_run and demo:
             sessions = register_sessions(bot_count, email, password, demo)
-            if sessions:
+            if len(sessions) > 0:
                 run_threads(sessions, groups, "delete_groups")
 
         return True
