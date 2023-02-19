@@ -36,7 +36,8 @@ def register_session(email, password, demo):
     start_time = time.time()
     bot = setup_worker(email, password, demo)
     total_time = time.time() - start_time
-    print(f"Session ready in {total_time} seconds\n")
+    if bot.driver:
+        print(f"Session ready in {total_time} seconds\n")
     return bot
 
 def register_sessions(bot_count, email, password, demo):
@@ -55,6 +56,7 @@ def gen_bots_list(bots, groups):
 
 def run_threads(bots, groups, command):
     bot_count = len(bots)
+    gen_bots_list(bots, groups)
 
     func_ = handle_create_group
     if command == "delete_groups":
@@ -62,7 +64,6 @@ def run_threads(bots, groups, command):
 
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
-        bots *= int(len(groups)/bot_count)
         executor.map(func_, bots, groups)
     for bot in bots[:bot_count]:
         bot.close_session()
@@ -201,7 +202,7 @@ def get_login_info():
     return email, password, demo
 
 def main_func(email=None, password=None, demo=False, app_run=False):
-    groups = get_group_data(4)
+    groups = get_group_data(5)
     sessions = []
 
     if not app_run:

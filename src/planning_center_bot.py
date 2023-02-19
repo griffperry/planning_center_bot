@@ -48,6 +48,7 @@ class PlanningCenterBot():
         field = self.attempt_find_element(by_type, xpath)
         if field:
             field.send_keys(text)
+            time.sleep(self.wait)
             return True
         else:
             print(f"Could not find field at {xpath}")
