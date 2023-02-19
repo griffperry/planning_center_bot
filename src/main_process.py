@@ -104,7 +104,7 @@ def get_group_data(num_groups):
         },
         2: {
             "name": "test group 3",
-            "leader": "Griff Perry",
+            "leader": "Alex Springer",
             "co-leader": None,
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
@@ -143,7 +143,7 @@ def get_group_data(num_groups):
         4: {
             "name": "test group 5",
             "leader": "Griff Perry",
-            "co-leader": "Kaylee Perry",
+            "co-leader": "Alex Springer",
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
