@@ -32,12 +32,12 @@ def handle_delete_group(bot, group):
             print(trace_back_str)
             sys.exit(1)
 
-def register_sessions(bot_count, email, password, demo):
+def register_session(email, password, demo):
     start_time = time.time()
-    bots = [ setup_worker(email, password, demo) for _ in range(bot_count) ]
+    bot = setup_worker(email, password, demo)
     total_time = time.time() - start_time
     print(f"Registered sessions in {total_time} seconds\n")
-    return bots
+    return bot
 
 def run_threads(bot_count, bots, groups):
     start_time = time.time()
@@ -196,6 +196,7 @@ def get_login_info():
 
 def main_func(email=None, password=None, demo=False, app_run=False):
     groups = get_group_data(4)
+    sessions = []
 
     if not app_run:
         email, password, demo = get_login_info()
@@ -204,7 +205,9 @@ def main_func(email=None, password=None, demo=False, app_run=False):
         command = sys.argv[-1]
         if command == "create_groups" or app_run:
             bot_count = 2 if (len(groups) % 2) == 0 else 1
-            sessions = register_sessions(bot_count, email, password, demo)
+            sessions.append(register_session(email, password, demo))
+            if bot_count > 1:
+                sessions.append(register_session(email, password, demo))
             if sessions:
                 run_threads(bot_count, sessions, groups)
         if command == "delete_groups" or app_run:
