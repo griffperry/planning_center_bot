@@ -39,16 +39,19 @@ def register_session(email, password, demo):
     print(f"Session ready in {total_time} seconds\n")
     return bot
 
+def register_sessions(bot_count, email, password, demo):
+    sessions = []
+    sessions.append(register_session(email, password, demo))
+    if bot_count > 1:
+        sessions.append(register_session(email, password, demo))
+    return sessions
+
 def run_threads(bots, groups, command):
     bot_count = len(bots)
 
-    if command == "create_groups":
-        func_ = handle_create_group
-    elif command == "delete_groups":
+    func_ = handle_create_group
+    if command == "delete_groups":
         func_ = handle_delete_group
-    else:
-        print("Invalid command function.")
-        sys.exit(1)
 
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
@@ -58,18 +61,6 @@ def run_threads(bots, groups, command):
         bot.close_session()
     total_time = time.time() - start_time
     print(f"Created all groups in {total_time} seconds")
-
-def delete_groups(groups, email, password, demo):
-    start_time = time.time()
-    bot = setup_worker(email, password, demo)
-    try:
-        for group in groups:
-            handle_delete_group(bot, group)
-    finally:
-        if bot:
-            bot.close_session()
-    total_time = time.time() - start_time
-    print(f"Deleted all groups in {total_time} seconds")
 
 def get_group_data(num_groups):
     # data = DataGenerator()
@@ -198,7 +189,7 @@ def get_group_data(num_groups):
 def get_login_info():
     email = input("\nEmail: ")
     password = getpass()
-    answer = input("Would you like to demo? [y/n]: ")
+    answer = input("Watch bots? [y/n]: ")
     demo = True if "y" in answer else False
     return email, password, demo
 
@@ -211,17 +202,22 @@ def main_func(email=None, password=None, demo=False, app_run=False):
 
     try:
         command = sys.argv[-1]
-        if command == "create_groups" or app_run:
-            bot_count = 2 if (len(groups) % 2) == 0 else 1
-            sessions.append(register_session(email, password, demo))
-            if bot_count > 1:
-                sessions.append(register_session(email, password, demo))
+        if not app_run and command not in ["create_groups", "delete_groups"]:
+            print("Invalid function command.")
+            sys.exit(1)
+
+        bot_count = 2 if (len(groups) % 2) == 0 else 1
+        sessions = register_sessions(bot_count, email, password, demo)
+        if sessions:
+            run_threads(sessions, groups, command)
+
+        if app_run and demo:
+            sessions = register_sessions(bot_count, email, password, demo)
             if sessions:
-                run_threads(sessions, groups, command)
-        if command == "delete_groups" or app_run:
-            delete_groups(groups, email, password, demo)
+                run_threads(sessions, groups, "delete_groups")
+
         return True
     except Exception:
         trace_back_str = traceback.format_exc()
         print(trace_back_str)
-        sys.exit(1)
+        return False
