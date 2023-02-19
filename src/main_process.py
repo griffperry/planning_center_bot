@@ -13,20 +13,20 @@ def setup_worker(email, password, demo):
         bot.go_to_main_groups_page()
     return bot
 
-def handle_group_init(bot, group):
+def handle_create_group(bot, group):
     if bot.driver:
         try:
-            bot.group_init(group)
+            bot.create_group(group)
             print(f"Group '{group['name']}' created.")
         except Exception as error:
             trace_back_str = traceback.format_exc()
             print(trace_back_str)
             sys.exit(1)
 
-def delete_group(bot, group):
+def handle_delete_group(bot, group):
     if bot.driver:
         try:
-            bot.delete_test_group(group.get("name"))
+            bot.delete_group(group.get("name"))
         except Exception as error:
             trace_back_str = traceback.format_exc()
             print(trace_back_str)
@@ -43,7 +43,7 @@ def run_threads(bot_count, bots, groups):
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
         bots *= int(len(groups)/bot_count)
-        executor.map(handle_group_init, bots, groups)
+        executor.map(handle_create_group, bots, groups)
     for bot in bots[:bot_count]:
         bot.close_session()
     total_time = time.time() - start_time
@@ -54,7 +54,7 @@ def delete_groups(groups, email, password, demo):
     bot = setup_worker(email, password, demo)
     try:
         for group in groups:
-            delete_group(bot, group)
+            handle_delete_group(bot, group)
     finally:
         if bot:
             bot.close_session()
@@ -195,7 +195,7 @@ def get_login_info():
     return email, password, demo
 
 def main_func(email=None, password=None, demo=False, app_run=False):
-    groups = get_group_data(1)
+    groups = get_group_data(4)
 
     if not app_run:
         email, password, demo = get_login_info()
@@ -211,4 +211,6 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             delete_groups(groups, email, password, demo)
         return True
     except Exception:
-        return False
+        trace_back_str = traceback.format_exc()
+        print(trace_back_str)
+        sys.exit(1)
