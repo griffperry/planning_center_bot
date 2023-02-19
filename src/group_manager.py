@@ -69,6 +69,8 @@ class GroupManager(PlanningCenterBot):
         return True
 
     def promote_member_to_leader(self, group, member):
+        # TODO: don't assume position based on name
+        # Bug with Alex getting added second
         member_type = self.get_member_type(group, member)
         if "leader" == member_type:
             promote_xpath = "//*[@id='group-member-finder']/div/div[5]/div[2]/div/div[5]/div/div"
