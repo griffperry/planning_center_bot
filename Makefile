@@ -14,7 +14,7 @@ groups: install data
 	python .\small_groups_creator.py create_groups
 
 .PHONY: clean
-clean: install
+clean: install data
 	python .\small_groups_creator.py delete_groups
 
 .PHONY: executable
