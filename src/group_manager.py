@@ -1,4 +1,5 @@
 import time
+import re
 from src.planning_center_bot import PlanningCenterBot
 from selenium.webdriver.common.by import By
 
@@ -69,9 +70,12 @@ class GroupManager(PlanningCenterBot):
         return True
 
     def promote_member_to_leader(self, group, member):
-        sorted_members = sorted(group["added members"])
-        member_position = sorted_members.index(member) + 1
-        promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/div[{member_position}]/div[5]/div/div"
+        div_slot = "div"
+        if len(group["added members"]) > 1:
+            sorted_members = sorted(group["added members"])
+            member_position = sorted_members.index(member) + 1
+            div_slot = f"div[{member_position}]"
+        promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/{div_slot}/div[5]/div/div"
         self.click_button(By.XPATH, promote_xpath)
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
@@ -116,8 +120,28 @@ class GroupManager(PlanningCenterBot):
 
     def add_group_tags(self, tags):
         if tags:
-            # TODO: Finish function
-            pass
+            self.click_button(By.XPATH, "//*[contains(text(), 'Add tags')]")
+            self.find_and_select_tag(tags.get("campus"))
+            self.find_and_select_tag(tags.get("year"))
+            self.find_and_select_tag(tags.get("season"))
+            self.find_and_select_tag(tags.get("regularity"))
+            for option in tags.get("group attributes"):
+                self.find_and_select_tag(option)
+            for option in tags.get("group type"):
+                self.find_and_select_tag(option)
+            for option in tags.get("group age"):
+                self.find_and_select_tag(option)
+            self.find_and_select_tag(tags.get("group members"))
+            self.find_and_select_tag(tags.get("day of week"))
+
+    def find_and_select_tag(self, tag):
+        if tag:
+            elements = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
+            for element in elements:
+                if tag == element.text:
+                    element.click()
+                    time.sleep(0.25)
+                    break
 
     def go_to_settings_page(self):
         self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
