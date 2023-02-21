@@ -54,8 +54,11 @@ class PlanningCenterBot():
             print(f"Could not find field at {xpath}")
             return False
 
+    def hit_enter_on_element(self, by_type, xpath):
+        self.add_text_to_field(by_type, xpath, Keys.ENTER)
+        time.sleep(self.wait)
+
     def attempt_find_element(self, by_type, xpath, timeout=3):
-        element = None
         sleep_time = 0.5
         max_tries = timeout/sleep_time
         tries = 0
@@ -66,11 +69,8 @@ class PlanningCenterBot():
             except Exception:
                 tries += 1
                 time.sleep(sleep_time)
+                element = None
         return element
-
-    def hit_enter_on_element(self, by_type, xpath):
-        self.add_text_to_field(by_type, xpath, Keys.ENTER)
-        time.sleep(self.wait)
 
     def close_session(self):
         print("Closing session")

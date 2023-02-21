@@ -13,12 +13,11 @@ class GroupManager(PlanningCenterBot):
     def delete_group(self, name):
         self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
         self.hit_enter_on_element(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
-        success = self.attempt_find_element(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
+        success = self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
         if success:
-            self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
             self.go_to_settings_page()
             selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
-            if name == selected_group.text:
+            if selected_group and name == selected_group.text:
                 self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
                 self.click_button(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
                 self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")            
@@ -49,11 +48,11 @@ class GroupManager(PlanningCenterBot):
         else:
             add_member_xpath = "//*[@id='group-member-finder']/div/div[3]/div[2]/div"
         self.click_button(By.XPATH, add_member_xpath)
-        success = self.search_and_add_member(member)
+        success = self.search_and_add_member(group, member)
         if "leader" in member_type and success:
             self.promote_member_to_leader(group, member)
 
-    def search_and_add_member(self, member):
+    def search_and_add_member(self, group, member):
         self.add_text_to_field(By.ID, "person_search", member)
         second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
         found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
@@ -66,19 +65,13 @@ class GroupManager(PlanningCenterBot):
         self.click_button(By.XPATH, only_result_xpath)
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
+        group["added members"].append(member)
         return True
 
     def promote_member_to_leader(self, group, member):
-        # TODO: don't assume position based on name
-        # Bug with Alex getting added second
-        member_type = self.get_member_type(group, member)
-        if "leader" == member_type:
-            promote_xpath = "//*[@id='group-member-finder']/div/div[5]/div[2]/div/div[5]/div/div"
-        elif "co-leader" == member_type:
-            promote_xpath = "//*[@id='group-member-finder']/div/div[5]/div[2]/div[2]/div[5]/div/div"
-        else:
-            print(f"Can't find promote button for {member}")
-            return
+        sorted_members = sorted(group["added members"])
+        member_position = sorted_members.index(member) + 1
+        promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/div[{member_position}]/div[5]/div/div"
         self.click_button(By.XPATH, promote_xpath)
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
