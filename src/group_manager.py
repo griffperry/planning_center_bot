@@ -1,5 +1,4 @@
 import time
-import re
 from src.planning_center_bot import PlanningCenterBot
 from selenium.webdriver.common.by import By
 
