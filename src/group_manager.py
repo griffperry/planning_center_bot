@@ -120,27 +120,26 @@ class GroupManager(PlanningCenterBot):
     def add_group_tags(self, tags):
         if tags:
             self.click_button(By.XPATH, "//*[contains(text(), 'Add tags')]")
-            self.find_and_select_tag(tags.get("campus"))
-            self.find_and_select_tag(tags.get("year"))
-            self.find_and_select_tag(tags.get("season"))
-            self.find_and_select_tag(tags.get("regularity"))
-            for option in tags.get("group attributes"):
-                self.find_and_select_tag(option)
-            for option in tags.get("group type"):
-                self.find_and_select_tag(option)
-            for option in tags.get("group age"):
-                self.find_and_select_tag(option)
-            self.find_and_select_tag(tags.get("group members"))
-            self.find_and_select_tag(tags.get("day of week"))
+            self.find_and_select_tags(tags)
 
-    def find_and_select_tag(self, tag):
-        if tag:
-            elements = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
-            for element in elements:
-                if tag == element.text:
-                    element.click()
-                    time.sleep(0.25)
-                    break
+    def find_and_select_tags(self, tags):
+        elements = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
+        readable_elements = [ element.text for element in elements ]
+        for tag in self.gen_simple_tag_list(tags):
+            if tag in readable_elements:
+                element_index = readable_elements.index(tag)
+                elements[element_index].click()
+                time.sleep(0.25)
+
+    def gen_simple_tag_list(self, tags):
+        tag_list = []
+        for tag in tags.values():
+            if isinstance(tag, str):
+                tag_list.append(tag)
+            if isinstance(tag, list):
+                for i in tag:
+                    tag_list.append(i)
+        return tag_list
 
     def go_to_settings_page(self):
         self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
