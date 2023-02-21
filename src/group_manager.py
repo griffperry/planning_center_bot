@@ -10,14 +10,13 @@ class GroupManager(PlanningCenterBot):
         self.demo = demo
         super().__init__()
 
-    def delete_test_group(self, name):
+    def delete_group(self, name):
         self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
         self.hit_enter_on_element(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
-        # handle when group isn't found
         success = self.attempt_find_element(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
         if success:
             self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
-            self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]") # go to settings tab
+            self.go_to_settings_page()
             selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
             if name == selected_group.text:
                 self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
@@ -30,15 +29,15 @@ class GroupManager(PlanningCenterBot):
         else:
             print(f"Search for group '{name}' failed.")
 
-    def group_init(self, group):
-        self.create_group(group)
+    def create_group(self, group):
+        self.add_group(group)
         self.add_member_to_group(group, group["leader"])
         if group.get("co-leader"):
             self.add_member_to_group(group, group["co-leader"])
         self.add_group_settings(group)
         self.return_out_to_main_groups_page()
 
-    def create_group(self, group):
+    def add_group(self, group):
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
         self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
@@ -70,6 +69,8 @@ class GroupManager(PlanningCenterBot):
         return True
 
     def promote_member_to_leader(self, group, member):
+        # TODO: don't assume position based on name
+        # Bug with Alex getting added second
         member_type = self.get_member_type(group, member)
         if "leader" == member_type:
             promote_xpath = "//*[@id='group-member-finder']/div/div[5]/div[2]/div/div[5]/div/div"
@@ -89,12 +90,12 @@ class GroupManager(PlanningCenterBot):
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[2]/form/div/label")
 
     def add_group_settings(self, group):
-        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
+        self.go_to_settings_page()
         self.add_meeting_schedule(group.get("schedule"))
         self.add_description(group.get("description"))
         self.add_group_contact_email(group.get("contact_email"))
-        # TODO: self.add_group_location(group.get("location"))
-        # TODO: self.add_group_tags(group.get("tags"))
+        self.add_group_location(group.get("leader"), group.get("location"))
+        self.add_group_tags(group.get("tags"))
 
     def add_meeting_schedule(self, schedule):
         if schedule:
@@ -114,6 +115,19 @@ class GroupManager(PlanningCenterBot):
             self.add_text_to_field(By.ID, "group_contact_email", email)
             self.hit_enter_on_element(By.ID, "group_contact_email")
             time.sleep(self.wait)
+
+    def add_group_location(self, leader_name, location):
+        if leader_name and location:
+            # TODO: Finish function
+            pass
+
+    def add_group_tags(self, tags):
+        if tags:
+            # TODO: Finish function
+            pass
+
+    def go_to_settings_page(self):
+        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
 
     def go_to_main_groups_page(self):
         self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
