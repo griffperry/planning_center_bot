@@ -203,13 +203,10 @@ def get_group_data(num_groups):
     return groups.values()
 
 def get_login_info():
-    # email = input("\nEmail: ")
-    # password = getpass()
-    # answer = input("Watch bots? [y/n]: ")
-    # demo = True if "y" in answer else False
-    email = "lgp0008@auburn.edu"
-    password = "botTester1"
-    demo = False
+    email = input("\nEmail: ")
+    password = getpass()
+    answer = input("Watch bots? [y/n]: ")
+    demo = True if "y" in answer else False
     return email, password, demo
 
 def main_func(email=None, password=None, demo=False, app_run=False):
