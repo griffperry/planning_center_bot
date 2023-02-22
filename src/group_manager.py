@@ -1,6 +1,8 @@
 import time
 from src.planning_center_bot import PlanningCenterBot
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import WebDriverException
 
 class GroupManager(PlanningCenterBot):
 
@@ -90,7 +92,7 @@ class GroupManager(PlanningCenterBot):
         self.add_meeting_schedule(group.get("schedule"))
         self.add_description(group.get("description"))
         self.add_group_contact_email(group.get("contact_email"))
-        self.add_group_location(group.get("leader"), group.get("location"))
+        # self.add_group_location(group.get("name"), group.get("address"))
         self.add_group_tags(group.get("tags"))
 
     def add_meeting_schedule(self, schedule):
@@ -112,15 +114,32 @@ class GroupManager(PlanningCenterBot):
             self.hit_enter_on_element(By.ID, "group_contact_email")
             time.sleep(self.wait)
 
-    def add_group_location(self, leader_name, location):
-        if leader_name and location:
-            # TODO: Finish function
-            pass
+    def add_group_location(self, group_name, address):
+        if group_name and address:
+            self.click_button(By.XPATH, "//option[contains(text(), 'Create a new location...')]")
+            self.add_location_contents(group_name, address)
+
+    def add_location_contents(self, group_name, address):
+        address_container = self.driver.find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
+        text_box = address_container.find_element(By.XPATH, ".//input[contains(@type, 'text')]")
+        text_box.send_keys(f"{group_name} location")
+        text_box.send_keys(Keys.ENTER)
+        time.sleep(self.wait)
+        text_box = address_container.find_element(By.XPATH, ".//input[contains(@placeholder, 'Street address')]")
+        text_box.send_keys(address)
+        text_box.send_keys(Keys.ENTER)
+        time.sleep(self.wait)
+        self.click_button(By.XPATH, "//option[contains(@value, 'hidden')]")
+        save_location_buttons = self.driver.find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
+        if len(save_location_buttons) > 1:
+            save_location_buttons[1].click()
+        time.sleep(1)
 
     def add_group_tags(self, tags):
         if tags:
-            self.click_button(By.XPATH, "//*[contains(text(), 'Add tags')]")
+            self.click_button(By.XPATH, "//span[contains(text(), 'Add tags')]")
             self.find_and_select_tags(tags)
+            self.click_button(By.XPATH, "//span[contains(text(), 'Add tags')]")
 
     def find_and_select_tags(self, tags):
         elements = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
@@ -129,7 +148,7 @@ class GroupManager(PlanningCenterBot):
             if tag in readable_elements:
                 element_index = readable_elements.index(tag)
                 elements[element_index].click()
-                time.sleep(0.25)
+                time.sleep(self.wait)
 
     def gen_simple_tag_list(self, tags):
         tag_list = []

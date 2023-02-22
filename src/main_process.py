@@ -83,7 +83,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -130,7 +130,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -164,7 +164,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
             "contact_email": None,
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -198,7 +198,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -232,7 +232,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -266,7 +266,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
