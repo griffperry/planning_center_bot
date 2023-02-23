@@ -92,7 +92,7 @@ class GroupManager(PlanningCenterBot):
         self.add_meeting_schedule(group.get("schedule"))
         self.add_description(group.get("description"))
         self.add_group_contact_email(group.get("contact_email"))
-        # self.add_group_location(group.get("name"), group.get("address"))
+        self.add_group_location(group.get("name"), group.get("address"))
         self.add_group_tags(group.get("tags"))
 
     def add_meeting_schedule(self, schedule):
@@ -133,7 +133,7 @@ class GroupManager(PlanningCenterBot):
         save_location_buttons = self.driver.find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
         if len(save_location_buttons) > 1:
             save_location_buttons[1].click()
-        time.sleep(1)
+        time.sleep(self.wait)
 
     def add_group_tags(self, tags):
         if tags:
