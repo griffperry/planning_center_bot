@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 class PlanningCenterBot():
 
     def __init__(self):
-        self.start_wait = 2
+        self.start_wait = 0.5
         self.wait = self.start_wait
         options = Options()
         if not self.demo:

@@ -11,6 +11,7 @@ class GroupManager(PlanningCenterBot):
         self.password = password
         self.demo = demo
         self.attempts = 0
+        self.location_attempts = 0
         self.max_attempts = 3
         super().__init__()
 
@@ -136,20 +137,30 @@ class GroupManager(PlanningCenterBot):
             self.add_location_contents(group_name, address)
 
     def add_location_contents(self, group_name, address):
-        address_container = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
-        text_box = address_container.find_element(By.XPATH, ".//input[contains(@type, 'text')]")
-        text_box.send_keys(f"{group_name} location")
-        text_box.send_keys(Keys.ENTER)
-        time.sleep(self.wait)
-        text_box = address_container.find_element(By.XPATH, ".//input[contains(@placeholder, 'Street address')]")
-        text_box.send_keys(address)
-        text_box.send_keys(Keys.ENTER)
-        time.sleep(self.wait)
-        self.click_button(By.XPATH, "//option[contains(@value, 'hidden')]")
-        save_location_buttons = self.attempt_find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
-        if len(save_location_buttons) > 1:
-            save_location_buttons[1].click()
-        time.sleep(self.wait)
+        try:
+            address_container = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
+            text_box = address_container.find_element(By.XPATH, ".//input[contains(@type, 'text')]")
+            text_box.send_keys(f"{group_name} location")
+            text_box.send_keys(Keys.ENTER)
+            time.sleep(self.wait)
+            text_box = address_container.find_element(By.XPATH, ".//input[contains(@placeholder, 'Street address')]")
+            text_box.send_keys(address)
+            text_box.send_keys(Keys.ENTER)
+            time.sleep(self.wait)
+            self.click_button(By.XPATH, "//option[contains(@value, 'hidden')]")
+            save_location_buttons = self.attempt_find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
+            if len(save_location_buttons) > 1:
+                save_location_buttons[1].click()
+            time.sleep(self.wait)
+            self.location_attempts = 0
+        except Exception:
+            self.driver.refresh()
+            self.location_attempts += 1
+            if self.location_attempts < self.max_attempts:
+                self.add_location_contents(group_name, address)
+            else:
+                print(f"Failed to add location in group {group_name}")
+
 
     def add_group_tags(self, tags):
         if tags:
@@ -198,6 +209,7 @@ class GroupManager(PlanningCenterBot):
         self.attempts += 1
         if self.attempts <= self.max_attempts:
             print(f"Retry group creation {group['name']}")
+            self.return_out_to_main_groups_page()
             self.create_group(group)
         else:
             (f"Failed to create group {group['name']}")
