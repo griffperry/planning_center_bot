@@ -16,17 +16,18 @@ def setup_worker(email, password, demo):
 def handle_create_group(bot, group):
     if bot.driver:
         try:
-            bot.create_group(group)
-            print(f"Group '{group['name']}' created.")
+            if bot.create_group(group):
+                print(f"Group '{group['name']}' created.")
         except Exception as error:
             trace_back_str = traceback.format_exc()
-            print(trace_back_str)
+            # print(trace_back_str)
             sys.exit(1)
 
 def handle_delete_group(bot, group):
     if bot.driver:
         try:
-            bot.delete_group(group.get("name"))
+            if bot.delete_group(group.get("name")):
+                print(f"Group '{group['name']}' deleted.")
         except Exception as error:
             trace_back_str = traceback.format_exc()
             print(trace_back_str)
@@ -90,37 +91,61 @@ def get_group_data(num_groups):
                 "season": "Winter/Spring",
                 "regularity": "Weekly",
                 "group attributes": [
-                    "Childcare Available",
                     "Online group",
                 ],
                 "group type": [
                     "Prayer",
                     "Bible Study",
-                    "Freedom",
-                    "Book Study",
-                    "Marriage",
                     "Finance",
-                    "Outreach",
-                    "Fitness/Health",
-                    "Families",
-                    "Fun/Hangout/Fellowship",
                     "Students",
                     "College Students",
-                    "Other",
                     "Outdoor",
-                    "Kids",
                 ],
                 "group age": [
-                    "All ages welcome",
-                    "Under 18",
                     "18-30",
                     "31-55",
                     "55+",
-                    "18 and up",
                 ],
                 "group members": "Men",
                 "day of week": "Thursday",
             },
+            # "tags": {
+            #     "campus": "Madison",
+            #     "year": "2023",
+            #     "season": "Winter/Spring",
+            #     "regularity": "Weekly",
+            #     "group attributes": [
+            #         "Childcare Available",
+            #         "Online group",
+            #     ],
+            #     "group type": [
+            #         "Prayer",
+            #         "Bible Study",
+            #         "Freedom",
+            #         "Book Study",
+            #         "Marriage",
+            #         "Finance",
+            #         "Outreach",
+            #         "Fitness/Health",
+            #         "Families",
+            #         "Fun/Hangout/Fellowship",
+            #         "Students",
+            #         "College Students",
+            #         "Other",
+            #         "Outdoor",
+            #         "Kids",
+            #     ],
+            #     "group age": [
+            #         "All ages welcome",
+            #         "Under 18",
+            #         "18-30",
+            #         "31-55",
+            #         "55+",
+            #         "18 and up",
+            #     ],
+            #     "group members": "Men",
+            #     "day of week": "Thursday",
+            # },
         },
         1: {
             "name": "test group 2",

@@ -10,33 +10,48 @@ class GroupManager(PlanningCenterBot):
         self.email = email
         self.password = password
         self.demo = demo
+        self.attempts = 0
+        self.max_attempts = 3
         super().__init__()
 
     def delete_group(self, name):
-        self.add_text_to_field(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
-        self.hit_enter_on_element(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
-        success = self.click_button(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
+        self.add_text_to_field_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
+        self.hit_enter_on_element_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
+        success = self.click_button_safe(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
         if success:
             self.go_to_settings_page()
             selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
             if selected_group and name == selected_group.text:
-                self.click_button(By.XPATH, "/html/body/main/div/div/section/header/div/a")
-                self.click_button(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
-                self.add_text_to_field(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")            
-                self.hit_enter_on_element(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
-                print(f"Deleted group '{name}'")
+                self.select_archive_and_delete()
+                return True
             else:
                 print("Selected wrong group.")
+                return False
         else:
             print(f"Search for group '{name}' failed.")
+            return False
+
+    def select_archive_and_delete(self):
+        self.click_button_safe(By.XPATH, "/html/body/main/div/div/section/header/div/a")
+        self.click_button_safe(By.XPATH, "/html/body/div[3]/div/div[3]/div/a")
+        self.add_text_to_field_safe(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]", "DELETE")
+        self.hit_enter_on_element_safe(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
 
     def create_group(self, group):
-        self.add_group(group)
-        self.add_member_to_group(group, group["leader"])
-        if group.get("co-leader"):
-            self.add_member_to_group(group, group["co-leader"])
-        self.add_group_settings(group)
-        self.return_out_to_main_groups_page()
+        print(f"Start group {group['name']}")
+        try:
+            self.add_group(group)
+            self.add_member_to_group(group, group["leader"])
+            if group.get("co-leader"):
+                self.add_member_to_group(group, group["co-leader"])
+            self.add_group_settings(group)
+            self.return_out_to_main_groups_page()
+            self.attempts = 0
+            # self.wait = self.start_wait
+            return True
+        except Exception:
+            self.retry_group_creation(group)
+            return False
 
     def add_group(self, group):
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
@@ -57,7 +72,7 @@ class GroupManager(PlanningCenterBot):
     def search_and_add_member(self, group, member):
         self.add_text_to_field(By.ID, "person_search", member)
         second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
-        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
+        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath, timeout=5)
         if found_second_member:
             # TODO: Use email to verify member when multiple members found.
             print(f"More than one result when searching for {member}")
@@ -78,14 +93,15 @@ class GroupManager(PlanningCenterBot):
             div_slot = f"div[{member_position}]"
         promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/{div_slot}/div[5]/div/div"
         self.click_button(By.XPATH, promote_xpath)
+        self.click_button(By.XPATH, "/html/body/div[2]/div/div[2]/div/form/fieldset[1]/div[1]/label")
         self.dont_notify_by_email()
-        self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
+        self.click_button(By.ID, "commit")
 
     def get_member_type(self, group, member):
         return list(group.keys())[list(group.values()).index(member)]
 
     def dont_notify_by_email(self):
-        self.click_button(By.XPATH, "/html/body/div[2]/div/div[2]/form/div/label")
+        self.click_button(By.XPATH, "//label[contains(@class, 'checkbox-label c-dark')]")
 
     def add_group_settings(self, group):
         self.go_to_settings_page()
@@ -120,7 +136,7 @@ class GroupManager(PlanningCenterBot):
             self.add_location_contents(group_name, address)
 
     def add_location_contents(self, group_name, address):
-        address_container = self.driver.find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
+        address_container = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
         text_box = address_container.find_element(By.XPATH, ".//input[contains(@type, 'text')]")
         text_box.send_keys(f"{group_name} location")
         text_box.send_keys(Keys.ENTER)
@@ -130,7 +146,7 @@ class GroupManager(PlanningCenterBot):
         text_box.send_keys(Keys.ENTER)
         time.sleep(self.wait)
         self.click_button(By.XPATH, "//option[contains(@value, 'hidden')]")
-        save_location_buttons = self.driver.find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
+        save_location_buttons = self.attempt_find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
         if len(save_location_buttons) > 1:
             save_location_buttons[1].click()
         time.sleep(self.wait)
@@ -142,7 +158,7 @@ class GroupManager(PlanningCenterBot):
             self.click_button(By.XPATH, "//span[contains(text(), 'Add tags')]")
 
     def find_and_select_tags(self, tags):
-        elements = self.driver.find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
+        elements = self.attempt_find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
         readable_elements = [ element.text for element in elements ]
         for tag in self.gen_simple_tag_list(tags):
             if tag in readable_elements:
@@ -161,15 +177,27 @@ class GroupManager(PlanningCenterBot):
         return tag_list
 
     def go_to_settings_page(self):
-        self.click_button(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
+        self.click_button_safe(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
 
     def go_to_main_groups_page(self):
-        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
-        self.click_button(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
+        self.click_button_safe(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
+        self.click_button_safe(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
 
     def return_out_to_main_groups_page(self):
         success = self.attempt_find_element(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
         if success:
-            self.click_button(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
+            self.click_button_safe(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
         else:
-            self.click_button(By.XPATH, "/html/body/div/div/div[3]/a[1]")
+            self.click_button_safe(By.XPATH, "/html/body/div/div/div[3]/a[1]")
+
+    def retry_group_creation(self, group):
+        self.driver.refresh()
+        self.wait += 0.5
+        self.return_out_to_main_groups_page()
+        self.delete_group(group["name"])
+        self.attempts += 1
+        if self.attempts <= self.max_attempts:
+            print(f"Retry group creation {group['name']}")
+            self.create_group(group)
+        else:
+            (f"Failed to create group {group['name']}")
