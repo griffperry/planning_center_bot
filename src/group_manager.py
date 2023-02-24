@@ -2,7 +2,6 @@ import time
 from src.planning_center_bot import PlanningCenterBot
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import WebDriverException
 
 class GroupManager(PlanningCenterBot):
 
@@ -41,11 +40,6 @@ class GroupManager(PlanningCenterBot):
         self.hit_enter_on_element_safe(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
 
     def create_group(self, group):
-        if self.create_group_internal(group):
-            return True
-        return False
-
-    def create_group_internal(self, group):
         print(f"Start group {group['name']}")
         try:
             self.add_group(group)
@@ -165,6 +159,7 @@ class GroupManager(PlanningCenterBot):
             self.driver.refresh()
             self.location_attempts += 1
             if self.location_attempts < self.max_attempts:
+                print(f"Retry adding location  '{group_name}'")
                 self.add_group_location(group_name, address)
             else:
                 print(f"Failed to add location in group {group_name}")
@@ -217,6 +212,6 @@ class GroupManager(PlanningCenterBot):
         if self.attempts < self.max_attempts:
             print(f"Retry group creation {group['name']}")
             self.return_out_to_main_groups_page()
-            self.create_group_internal(group)
+            self.create_group(group)
         else:
             print(f"Failed to create group {group['name']}")

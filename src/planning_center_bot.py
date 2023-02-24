@@ -12,8 +12,6 @@ class PlanningCenterBot():
         self.wait = self.start_wait
         options = Options()
         if not self.demo:
-            self.start_wait = 0.5
-            self.wait = self.start_wait
             options.add_argument('-headless')
         options.add_argument('log-level=3')
         self.driver = webdriver.Chrome(options=options)
@@ -43,7 +41,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            # print(f"Could not find button at {xpath}")
+            print(f"Could not find button at {xpath}")
             raise Exception
 
     def add_text_to_field(self, by_type, xpath, text):
@@ -53,7 +51,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            # print(f"Could not find field at {xpath}")
+            print(f"Could not find field at {xpath}")
             raise Exception
 
     def hit_enter_on_element(self, by_type, xpath):
@@ -67,7 +65,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            # print(f"Could not find button at {xpath}")
+            print(f"Could not find button at {xpath}")
             return False
 
     def add_text_to_field_safe(self, by_type, xpath, text):
@@ -77,7 +75,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            # print(f"Could not find field at {xpath}")
+            print(f"Could not find field at {xpath}")
             return False
 
     def hit_enter_on_element_safe(self, by_type, xpath):
