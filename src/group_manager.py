@@ -15,7 +15,8 @@ class GroupManager(PlanningCenterBot):
         self.max_attempts = 3
         super().__init__()
 
-    def delete_group(self, name):
+    def delete_group(self, group):
+        name = group["name"]
         self.add_text_to_field_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
         self.hit_enter_on_element_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
         success = self.click_button_safe(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
@@ -24,6 +25,7 @@ class GroupManager(PlanningCenterBot):
             selected_group = self.attempt_find_element(By.XPATH, "//*[@id='groups-header']/header/div[2]/div[1]/h1")
             if selected_group and name == selected_group.text:
                 self.select_archive_and_delete()
+                group["added members"] = []
                 return True
             else:
                 print("Selected wrong group.")
@@ -39,6 +41,11 @@ class GroupManager(PlanningCenterBot):
         self.hit_enter_on_element_safe(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
 
     def create_group(self, group):
+        if self.create_group_internal(group):
+            return True
+        return False
+
+    def create_group_internal(self, group):
         print(f"Start group {group['name']}")
         try:
             self.add_group(group)
@@ -48,11 +55,12 @@ class GroupManager(PlanningCenterBot):
             self.add_group_settings(group)
             self.return_out_to_main_groups_page()
             self.attempts = 0
-            # self.wait = self.start_wait
+            self.wait = self.start_wait
+            group["added members"] = []
+            print(f"Group '{group['name']}' created.")
             return True
         except Exception:
             self.retry_group_creation(group)
-            return False
 
     def add_group(self, group):
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
@@ -157,10 +165,9 @@ class GroupManager(PlanningCenterBot):
             self.driver.refresh()
             self.location_attempts += 1
             if self.location_attempts < self.max_attempts:
-                self.add_location_contents(group_name, address)
+                self.add_group_location(group_name, address)
             else:
                 print(f"Failed to add location in group {group_name}")
-
 
     def add_group_tags(self, tags):
         if tags:
@@ -203,13 +210,13 @@ class GroupManager(PlanningCenterBot):
 
     def retry_group_creation(self, group):
         self.driver.refresh()
-        self.wait += 0.5
+        self.wait += 0.25
         self.return_out_to_main_groups_page()
-        self.delete_group(group["name"])
+        self.delete_group(group)
         self.attempts += 1
-        if self.attempts <= self.max_attempts:
+        if self.attempts < self.max_attempts:
             print(f"Retry group creation {group['name']}")
             self.return_out_to_main_groups_page()
-            self.create_group(group)
+            self.create_group_internal(group)
         else:
-            (f"Failed to create group {group['name']}")
+            print(f"Failed to create group {group['name']}")

@@ -8,7 +8,7 @@ from selenium.webdriver.common.keys import Keys
 class PlanningCenterBot():
 
     def __init__(self):
-        self.start_wait = 0.5
+        self.start_wait = 0.75
         self.wait = self.start_wait
         options = Options()
         if not self.demo:
@@ -104,13 +104,13 @@ class PlanningCenterBot():
         tries = 0
         while tries < max_tries:
             try:
-                element = self.driver.find_elements(by_type, xpath)
+                elements = self.driver.find_elements(by_type, xpath)
                 break
             except Exception:
                 tries += 1
                 time.sleep(sleep_time)
-                element = []
-        return element
+                elements = []
+        return elements
 
     def close_session(self):
         print("Closing session")

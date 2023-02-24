@@ -16,17 +16,16 @@ def setup_worker(email, password, demo):
 def handle_create_group(bot, group):
     if bot.driver:
         try:
-            if bot.create_group(group):
-                print(f"Group '{group['name']}' created.")
+            bot.create_group(group)
         except Exception as error:
             trace_back_str = traceback.format_exc()
-            # print(trace_back_str)
+            print(trace_back_str)
             sys.exit(1)
 
 def handle_delete_group(bot, group):
     if bot.driver:
         try:
-            if bot.delete_group(group.get("name")):
+            if bot.delete_group(group):
                 print(f"Group '{group['name']}' deleted.")
         except Exception as error:
             trace_back_str = traceback.format_exc()
@@ -344,6 +343,7 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             print("Invalid function command.")
             sys.exit(1)
 
+        bot_count = 1
         bot_count = 1 if len(groups) == 1 else 2
         sessions = register_sessions(bot_count, email, password, demo)
         if len(sessions) > 0:
