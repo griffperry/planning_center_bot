@@ -75,7 +75,7 @@ class GroupManager(PlanningCenterBot):
     def search_and_add_member(self, group, member):
         self.add_text_to_field(By.ID, "person_search", member)
         second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
-        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath, timeout=5)
+        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
         if found_second_member:
             # TODO: Use email to verify member when multiple members found.
             print(f"More than one result when searching for {member}")
