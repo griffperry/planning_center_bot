@@ -44,9 +44,8 @@ class GroupManager(PlanningCenterBot):
         try:
             success = self.add_group(group)
             if success:
-                self.add_member_to_group(group, group["leader"])
-                if group.get("co-leader"):
-                    self.add_member_to_group(group, group["co-leader"])
+                for member in group["members"].values():
+                    self.add_member_to_group(group, member)
                 self.add_group_settings(group)
                 self.return_out_to_main_groups_page()
                 self.attempts = 0
@@ -71,37 +70,66 @@ class GroupManager(PlanningCenterBot):
         return True
 
     def add_member_to_group(self, group, member):
-        member_type = self.get_member_type(group, member)
-        if member_type == "leader":
+        member_name = member.get("name")
+        member_status = member.get("status")
+        if len(group["added members"]) < 1:
             add_member_xpath = "/html/body/main/div/div/div[2]/div/div/div/div[3]/div[2]/div/div"
         else:
             add_member_xpath = "//*[@id='group-member-finder']/div/div[3]/div[2]/div"
         self.click_button(By.XPATH, add_member_xpath)
         success = self.search_and_add_member(group, member)
-        if "leader" in member_type and success:
-            self.promote_member_to_leader(group, member)
+        if "leader" in member_status and success:
+            self.promote_member_to_leader(group, member_name)
+        else:
+            self.click_button(By.XPATH, "/html/body/div[2]/div/div[1]/button") # Click X
 
     def search_and_add_member(self, group, member):
-        self.add_text_to_field(By.ID, "person_search", member)
-        second_member_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[2]/button"
-        found_second_member = self.attempt_find_element(By.XPATH, second_member_xpath)
-        if found_second_member:
-            # TODO: Use email to verify member when multiple members found.
-            print(f"More than one result when searching for {member}")
-            self.click_button(By.XPATH, "/html/body/div[2]/div/div[1]/button") # Click X
+        group_name = group.get("name")
+        member_name = member.get("name")
+        member_email = member.get("email")
+        member_status = member.get("status")
+
+        self.add_text_to_field(By.ID, "person_search", member_name)
+        time.sleep(3)
+        results = self.attempt_find_elements(By.XPATH, "//div[contains(@class, 'autocomplete-result-name')]")
+        if len(results) == 0:
+            print(f"{member_name} not found when added to {group_name}.")
             return False
-        only_result_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
-        self.click_button(By.XPATH, only_result_xpath)
+        elif len(results) == 1:
+            result_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
+        else:
+            success, result_xpath = self.verify_member_email(results, member_email, member_status)
+            if not success:
+                print(f"{member_name} not added to {group_name} as {member_status}.")
+                return False
+        self.click_button(By.XPATH, result_xpath)
         self.dont_notify_by_email()
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button[2]")
-        group["added members"].append(member)
+        group["added members"].append(member_name)
         return True
 
-    def promote_member_to_leader(self, group, member):
+    def verify_member_email(self, results, email, status):
+        success = False
+        result_xpath = None
+        if email and status == "leader":
+            email_found = None
+            for index, result in enumerate(results):
+                try:
+                    email_found = result.find_element(By.XPATH, f"..//span[contains(text(), '{email[:20]}')]")
+                except Exception:
+                    pass
+                if email_found:
+                    result_xpath = f"/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li[{index+1}]/button"
+                    success = True
+                    break
+                continue
+        return success, result_xpath
+
+    def promote_member_to_leader(self, group, member_name):
         div_slot = "div"
         if len(group["added members"]) > 1:
             sorted_members = sorted(group["added members"])
-            member_position = sorted_members.index(member) + 1
+            member_position = sorted_members.index(member_name) + 1
             div_slot = f"div[{member_position}]"
         promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/{div_slot}/div[5]/div/div"
         self.click_button(By.XPATH, promote_xpath)
