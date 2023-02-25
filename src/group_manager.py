@@ -42,17 +42,20 @@ class GroupManager(PlanningCenterBot):
     def create_group(self, group):
         print(f"Start group {group['name']}")
         try:
-            self.add_group(group)
-            self.add_member_to_group(group, group["leader"])
-            if group.get("co-leader"):
-                self.add_member_to_group(group, group["co-leader"])
-            self.add_group_settings(group)
-            self.return_out_to_main_groups_page()
-            self.attempts = 0
-            self.wait = self.start_wait
-            group["added members"] = []
-            print(f"Group '{group['name']}' created.")
-            return True
+            success = self.add_group(group)
+            if success:
+                self.add_member_to_group(group, group["leader"])
+                if group.get("co-leader"):
+                    self.add_member_to_group(group, group["co-leader"])
+                self.add_group_settings(group)
+                self.return_out_to_main_groups_page()
+                self.attempts = 0
+                self.wait = self.start_wait
+                group["added members"] = []
+                print(f"Group '{group['name']}' created.")
+                return True
+            else:
+                print(f"Group {group['name']} already exists.")
         except Exception:
             self.retry_group_creation(group)
 
@@ -60,6 +63,12 @@ class GroupManager(PlanningCenterBot):
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
         self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
+        error = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'warning-alert alert alert--warning')]", timeout=1)
+        if error:
+            self.click_button(By.XPATH, "/html/body/div[2]/div/div[1]/button") # Click X
+            self.return_out_to_main_groups_page()
+            return False
+        return True
 
     def add_member_to_group(self, group, member):
         member_type = self.get_member_type(group, member)
