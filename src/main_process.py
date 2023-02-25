@@ -22,6 +22,7 @@ def handle_create_group(bot, groups):
                 trace_back_str = traceback.format_exc()
                 print(trace_back_str)
                 sys.exit(1)
+        bot.close_session()
 
 def handle_delete_group(bot, groups):
     if bot.driver:
@@ -33,6 +34,7 @@ def handle_delete_group(bot, groups):
                 trace_back_str = traceback.format_exc()
                 print(trace_back_str)
                 sys.exit(1)
+        bot.close_session()
 
 def register_session(email, password, demo):
     start_time = time.time()
@@ -46,16 +48,18 @@ def register_sessions(bot_count, email, password, demo):
     sessions = [ register_session(email, password, demo) for _ in range(bot_count) ]
     return sessions
 
-def split_up_groups(groups):
+def split_up_groups(bot_count, groups):
     chunked_groups = []
     first_split = dict(list(groups.items())[len(groups)//2:])
-    second_split = dict(list(groups.items())[:len(groups)//2])
     chunked_groups.append(first_split.values())
-    chunked_groups.append(second_split.values())
+    if bot_count > 1:
+        second_split = dict(list(groups.items())[:len(groups)//2])
+        chunked_groups.append(second_split.values())
     return chunked_groups
 
 def run_threads(bots, groups, command):
-    chunked_groups = split_up_groups(groups)
+    bot_count = len(bots)
+    chunked_groups = split_up_groups(bot_count, groups)
 
     func_ = handle_create_group
     action = "Created"
@@ -64,10 +68,8 @@ def run_threads(bots, groups, command):
         action = "Deleted"
 
     start_time = time.time()
-    with ThreadPoolExecutor(max_workers=len(bots)) as executor:
+    with ThreadPoolExecutor(max_workers=bot_count) as executor:
         executor.map(func_, bots, chunked_groups)
-    for bot in bots:
-        bot.close_session()
     total_time = time.time() - start_time
     print(f"{action} all groups in {total_time} seconds")
 
