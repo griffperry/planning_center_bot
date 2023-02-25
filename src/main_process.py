@@ -13,24 +13,26 @@ def setup_worker(email, password, demo):
         bot.go_to_main_groups_page()
     return bot
 
-def handle_create_group(bot, group):
+def handle_create_group(bot, groups):
     if bot.driver:
-        try:
-            bot.create_group(group)
-            print(f"Group '{group['name']}' created.")
-        except Exception as error:
-            trace_back_str = traceback.format_exc()
-            print(trace_back_str)
-            sys.exit(1)
+        for group in groups:
+            try:
+                bot.create_group(group)
+            except Exception as error:
+                trace_back_str = traceback.format_exc()
+                print(trace_back_str)
+                sys.exit(1)
 
-def handle_delete_group(bot, group):
+def handle_delete_group(bot, groups):
     if bot.driver:
-        try:
-            bot.delete_group(group.get("name"))
-        except Exception as error:
-            trace_back_str = traceback.format_exc()
-            print(trace_back_str)
-            sys.exit(1)
+        for group in groups:
+            try:
+                if bot.delete_group(group):
+                    print(f"Group '{group['name']}' deleted.")
+            except Exception as error:
+                trace_back_str = traceback.format_exc()
+                print(trace_back_str)
+                sys.exit(1)
 
 def register_session(email, password, demo):
     start_time = time.time()
@@ -44,19 +46,16 @@ def register_sessions(bot_count, email, password, demo):
     sessions = [ register_session(email, password, demo) for _ in range(bot_count) ]
     return sessions
 
-def gen_bots_list(bots, groups):
-    bot_count = len(bots)
-    if bot_count < 1:
-        print("Error: no bots to run with.")
-        sys.exit(1)
-    bots *= int(len(groups)/bot_count)
-    if (len(groups) % 2) == 1:
-        bots.append(bots[0])
-    return bots
+def split_up_groups(groups):
+    chunked_groups = []
+    first_split = dict(list(groups.items())[len(groups)//2:])
+    second_split = dict(list(groups.items())[:len(groups)//2])
+    chunked_groups.append(first_split.values())
+    chunked_groups.append(second_split.values())
+    return chunked_groups
 
 def run_threads(bots, groups, command):
-    bot_count = len(bots)
-    gen_bots_list(bots, groups)
+    chunked_groups = split_up_groups(groups)
 
     func_ = handle_create_group
     action = "Created"
@@ -65,9 +64,9 @@ def run_threads(bots, groups, command):
         action = "Deleted"
 
     start_time = time.time()
-    with ThreadPoolExecutor(max_workers=bot_count) as executor:
-        executor.map(func_, bots, groups)
-    for bot in bots[:bot_count]:
+    with ThreadPoolExecutor(max_workers=len(bots)) as executor:
+        executor.map(func_, bots, chunked_groups)
+    for bot in bots:
         bot.close_session()
     total_time = time.time() - start_time
     print(f"{action} all groups in {total_time} seconds")
@@ -83,7 +82,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -130,7 +129,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -164,7 +163,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
             "contact_email": None,
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -198,7 +197,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "test@gmail.com",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -232,7 +231,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -266,7 +265,7 @@ def get_group_data(num_groups):
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
             "contact_email": "lgp0008@auburn.edu",
-            "location": "Perry Home",
+            "address": "11306 County Line Rd, Madison, AL 35756",
             "tags": {
                 "campus": "Madison",
                 "year": "2023",
@@ -297,7 +296,7 @@ def get_group_data(num_groups):
     groups = {}
     for i in range(num_groups):
         groups[i] = data[i]
-    return groups.values()
+    return groups
 
 def get_login_info():
     email = input("\nEmail: ")
