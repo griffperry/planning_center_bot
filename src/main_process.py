@@ -62,24 +62,32 @@ def run_threads(bots, groups, command):
     chunked_groups = split_up_groups(bot_count, groups)
 
     func_ = handle_create_group
-    action = "Created"
     if command == "delete_groups":
         func_ = handle_delete_group
-        action = "Deleted"
 
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
         executor.map(func_, bots, chunked_groups)
     total_time = time.time() - start_time
-    print(f"{action} all groups in {total_time} seconds")
+    print(f"Finished in {total_time} seconds")
 
 def get_group_data(num_groups):
     # data = DataGenerator()
     data = {
         0: {
             "name": "test group 1",
-            "leader": "Griff Perry",
-            "co-leader": "Josh Smith",
+            "members": {
+                0: {
+                    "name": "Griff",
+                    "status": "leader",
+                    "email": "lgp0008@auburn.edu",
+                },
+                1: {
+                    "name": "Dont Exist User",
+                    "status": "co-leader",
+                    "email": None, # TODO: Do we require co-leader email?
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -125,8 +133,18 @@ def get_group_data(num_groups):
         },
         1: {
             "name": "test group 2",
-            "leader": "Griff Perry",
-            "co-leader": "Alex Springer",
+            "members": {
+                0: {
+                    "name": "Griff Perry",
+                    "status": "leader",
+                    "email": "lgp0008@auburn.edu",
+                },
+                1: {
+                    "name": "Josh Smith",
+                    "status": "co-leader",
+                    "email": None,
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -159,8 +177,18 @@ def get_group_data(num_groups):
         },
         2: {
             "name": "test group 3",
-            "leader": "Alex Springer",
-            "co-leader": "Griff Perry",
+            "members": {
+                0: {
+                    "name": "Alex Springer",
+                    "status": "leader",
+                    "email": "springer.alex.h@gmail.com",
+                },
+                1: {
+                    "name": "Griff",
+                    "status": "co-leader",
+                    "email": None,
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": None,
@@ -193,8 +221,18 @@ def get_group_data(num_groups):
         },
         3: {
             "name": "test group 4",
-            "leader": "Griff Perry",
-            "co-leader": "Josh Smith",
+            "members": {
+                0: {
+                    "name": "Alex",
+                    "status": "leader",
+                    "email": "lgp0008@auburn.edu",
+                },
+                1: {
+                    "name": "Josh Smith",
+                    "status": "co-leader",
+                    "email": None, # TODO: Do we require co-leader email?
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -227,8 +265,18 @@ def get_group_data(num_groups):
         },
         4: {
             "name": "test group 5",
-            "leader": "Griff Perry",
-            "co-leader": "Alex Springer",
+            "members": {
+                0: {
+                    "name": "Griff Perry",
+                    "status": "leader",
+                    "email": "lgp0008@auburn.edu",
+                },
+                1: {
+                    "name": "Alex Springer",
+                    "status": "co-leader",
+                    "email": None,
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
@@ -261,8 +309,18 @@ def get_group_data(num_groups):
         },
         5: {
             "name": "test group 6",
-            "leader": "Griff Perry",
-            "co-leader": "Kaylee Perry",
+            "members": {
+                0: {
+                    "name": "Alex Sp",
+                    "status": "leader",
+                    "email": "springer.alex.h@gmail.com",
+                },
+                1: {
+                    "name": "Griff Perry",
+                    "status": "co-leader",
+                    "email": None,
+                },
+            },
             "added members": [],
             "schedule": "Thursday @ 11:30 AM Weekly",
             "description": "Test description",
