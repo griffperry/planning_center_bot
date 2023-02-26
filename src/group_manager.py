@@ -1,9 +1,11 @@
 import time
+# import traceback
 from src.planning_center_bot import PlanningCenterBot
+from src.status_report import StatusReport
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-class GroupManager(PlanningCenterBot):
+class GroupManager(PlanningCenterBot, StatusReport):
 
     def __init__(self, email, password, demo):
         self.email = email
@@ -12,6 +14,9 @@ class GroupManager(PlanningCenterBot):
         self.attempts = 0
         self.location_attempts = 0
         self.max_attempts = 3
+        self.reports = []
+        self.group_status = {}
+        self.group_caveats = {}
         super().__init__()
 
     def delete_group(self, group):
@@ -40,7 +45,10 @@ class GroupManager(PlanningCenterBot):
         self.hit_enter_on_element_safe(By.XPATH, "/html/body/div[4]/div/div[2]/input[1]")
 
     def create_group(self, group):
-        print(f"Start group {group['name']}")
+        group_name = group["name"]
+        print(f"Start group {group_name}")
+        self.group_status[group_name] = None
+        self.group_caveats[group_name] = []
         try:
             success = self.add_group(group)
             if success:
@@ -48,19 +56,23 @@ class GroupManager(PlanningCenterBot):
                     self.add_member_to_group(group, member)
                 self.add_group_settings(group)
                 self.return_out_to_main_groups_page()
-                self.attempts = 0
-                self.wait = self.start_wait
-                group["added members"] = []
-                print(f"Group '{group['name']}' created.")
-                return True
+                self.add_group_status(group_name, f"Group '{group_name}' created.")
             else:
-                print(f"Group {group['name']} already exists.")
+                self.add_group_status(group_name, f"Group '{group_name}' already exists.")
+
+            self.reports.append(self.create_report(group_name))
+            self.attempts = 0
+            self.wait = self.start_wait
+            group["added members"] = []
         except Exception:
+            # trace_back_str = traceback.format_exc()
+            # print(trace_back_str)
             self.retry_group_creation(group)
 
     def add_group(self, group):
+        group_name = group["name"]
         self.click_button(By.XPATH, "//*[@id='filtered-groups-header']/div/div/div/button[2]")
-        self.add_text_to_field(By.NAME, "group[name]", group.get("name"))
+        self.add_text_to_field(By.NAME, "group[name]", group_name)
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[3]/button/span")
         error = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'warning-alert alert alert--warning')]", timeout=1)
         if error:
@@ -93,14 +105,14 @@ class GroupManager(PlanningCenterBot):
         time.sleep(3)
         results = self.attempt_find_elements(By.XPATH, "//div[contains(@class, 'autocomplete-result-name')]")
         if len(results) == 0:
-            print(f"{member_name} not found when added to {group_name}.")
+            self.add_group_caveat(group_name, f"{member_name} not found when added to '{group_name}'.")
             return False
         elif len(results) == 1:
             result_xpath = "/html/body/div[2]/div/div[2]/div/div/div[2]/div/div[2]/div/ul[1]/li/button"
         else:
             success, result_xpath = self.verify_member_email(results, member_email, member_status)
             if not success:
-                print(f"{member_name} not added to {group_name} as {member_status}.")
+                self.add_group_caveat(group_name, f"{member_name} not added to '{group_name}' as {member_status}.")
                 return False
         self.click_button(By.XPATH, result_xpath)
         self.dont_notify_by_email()
@@ -199,7 +211,7 @@ class GroupManager(PlanningCenterBot):
                 print(f"Retry adding location  '{group_name}'")
                 self.add_group_location(group_name, address)
             else:
-                print(f"Failed to add location in group {group_name}")
+                self.add_group_caveat(group_name, f"Failed to add location in group '{group_name}'")
 
     def add_group_tags(self, tags):
         if tags:
@@ -241,14 +253,15 @@ class GroupManager(PlanningCenterBot):
             self.click_button_safe(By.XPATH, "/html/body/div/div/div[3]/a[1]")
 
     def retry_group_creation(self, group):
+        group_name = group["name"]
         self.driver.refresh()
         self.wait += 0.25
         self.return_out_to_main_groups_page()
         self.delete_group(group)
         self.attempts += 1
         if self.attempts < self.max_attempts:
-            print(f"Retry group creation {group['name']}")
+            print(f"Retry group creation {group_name}")
             self.return_out_to_main_groups_page()
             self.create_group(group)
         else:
-            print(f"Failed to create group {group['name']}")
+            self.add_group_status(group_name, f"Failed to create group '{group_name}'")

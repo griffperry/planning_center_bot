@@ -365,6 +365,15 @@ def get_login_info():
     demo = True if "y" in answer else False
     return email, password, demo
 
+def create_report_summary(sessions):
+    file = "small_group_creator_report.txt"
+    open(file, "w").close()
+    f = open(file, "w")
+    for session in sessions:
+        for report in session.reports:
+            f.write(report)
+    f.close()
+
 def main_func(email=None, password=None, demo=False, app_run=False):
     groups = get_group_data(6)
     sessions = []
@@ -382,6 +391,7 @@ def main_func(email=None, password=None, demo=False, app_run=False):
         sessions = register_sessions(bot_count, email, password, demo)
         if len(sessions) > 0:
             run_threads(sessions, groups, command)
+            create_report_summary(sessions)
 
         if app_run and demo:
             sessions = register_sessions(bot_count, email, password, demo)
