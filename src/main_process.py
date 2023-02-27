@@ -7,15 +7,16 @@ from src.group_manager import GroupManager
 # from src.data_generator import DataGenerator
 
 
-def setup_worker(email, password, demo):
-    bot = GroupManager(email, password, demo)
+def setup_worker(email, password, demo, id):
+    bot = GroupManager(email, password, demo, id)
     if bot.driver:
         bot.go_to_main_groups_page()
     return bot
 
-def handle_create_group(bot, groups):
+def handle_create_group(bot):
     if bot.driver:
-        for group in groups:
+        while len(groups) > 0:
+            group = groups.pop(next(iter(groups)))
             try:
                 bot.create_group(group)
             except Exception as error:
@@ -24,42 +25,34 @@ def handle_create_group(bot, groups):
                 sys.exit(1)
         bot.close_session()
 
-def handle_delete_group(bot, groups):
+def handle_delete_group(bot):
     if bot.driver:
-        for group in groups:
+        while len(groups) > 0:
+            group = groups.pop(next(iter(groups)))
             try:
                 if bot.delete_group(group):
-                    print(f"Group '{group['name']}' deleted.")
+                    print(f"(User {bot.id}) Group '{group['name']}' deleted.")
             except Exception as error:
                 trace_back_str = traceback.format_exc()
                 print(trace_back_str)
                 sys.exit(1)
         bot.close_session()
 
-def register_session(email, password, demo):
-    start_time = time.time()
-    bot = setup_worker(email, password, demo)
-    total_time = time.time() - start_time
+def register_session(id):
+    bot = setup_worker(email, password, demo, id)
     if bot.driver:
-        print(f"Session ready in {total_time} seconds\n")
+        sessions.append(bot)
     return bot
 
-def register_sessions(bot_count, email, password, demo):
-    sessions = [ register_session(email, password, demo) for _ in range(bot_count) ]
-    return sessions
+def register_sessions(bot_count):
+    start_time = time.time()
+    with ThreadPoolExecutor(max_workers=bot_count) as executor:
+        executor.map(register_session, range(bot_count))
+    total_time = time.time() - start_time
+    print(f"Sessions ready in {total_time} seconds.\n")
 
-def split_up_groups(bot_count, groups):
-    chunked_groups = []
-    first_split = dict(list(groups.items())[len(groups)//2:])
-    chunked_groups.append(first_split.values())
-    if bot_count > 1:
-        second_split = dict(list(groups.items())[:len(groups)//2])
-        chunked_groups.append(second_split.values())
-    return chunked_groups
-
-def run_threads(bots, groups, command):
-    bot_count = len(bots)
-    chunked_groups = split_up_groups(bot_count, groups)
+def run_threads(command):
+    bot_count = len(sessions)
 
     func_ = handle_create_group
     if command == "delete_groups":
@@ -67,7 +60,7 @@ def run_threads(bots, groups, command):
 
     start_time = time.time()
     with ThreadPoolExecutor(max_workers=bot_count) as executor:
-        executor.map(func_, bots, chunked_groups)
+        executor.map(func_, sessions)
     total_time = time.time() - start_time
     print(f"Finished in {total_time} seconds")
 
@@ -359,6 +352,9 @@ def get_group_data(num_groups):
     return groups
 
 def get_login_info():
+    global email
+    global password
+    global demo
     email = input("\nEmail: ")
     password = getpass()
     answer = input("Watch bots? [y/n]: ")
@@ -375,11 +371,13 @@ def create_report_summary(sessions):
     f.close()
 
 def main_func(email=None, password=None, demo=False, app_run=False):
+    global groups
     groups = get_group_data(6)
+    global sessions
     sessions = []
 
     if not app_run:
-        email, password, demo = get_login_info()
+        get_login_info()
 
     try:
         command = sys.argv[-1]
@@ -387,16 +385,16 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             print("Invalid function command.")
             sys.exit(1)
 
-        bot_count = 1 if len(groups) == 1 else 2
-        sessions = register_sessions(bot_count, email, password, demo)
+        bot_count = 1 if len(groups) == 1 else 3
+        register_sessions(bot_count)
         if len(sessions) > 0:
-            run_threads(sessions, groups, command)
+            run_threads(command)
             create_report_summary(sessions)
 
         if app_run and demo:
-            sessions = register_sessions(bot_count, email, password, demo)
+            register_sessions(bot_count)
             if len(sessions) > 0:
-                run_threads(sessions, groups, "delete_groups")
+                run_threads("delete_groups")
 
         return True
     except Exception:

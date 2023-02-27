@@ -24,15 +24,15 @@ class PlanningCenterBot():
         password_error_message = "Password is incorrect"
         errors = self.attempt_find_elements(By.XPATH, "/html/body/div[1]/div[2]/div/div")
         if any(email_error_message in e.text for e in errors):
-            print("[!] Login failed | Wrong email")
+            print(f"(User {self.id}) [!] Login failed | Wrong email")
             self.close_session()
             self.driver = None
         elif any(password_error_message in e.text for e in errors):
-            print("[!] Login failed | Wrong password")
+            print(f"(User {self.id}) [!] Login failed | Wrong password")
             self.close_session()
             self.driver = None
         else:
-            print("[+] Login successful")
+            print(f"(User {self.id}) [+] Login successful")
     
     def click_button(self, by_type, xpath):
         button = self.attempt_find_element(by_type, xpath)
@@ -41,7 +41,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            print(f"Could not find button at {xpath}")
+            print(f"(User {self.id}) Could not find button at {xpath}")
             raise Exception
 
     def add_text_to_field(self, by_type, xpath, text):
@@ -51,7 +51,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            print(f"Could not find field at {xpath}")
+            print(f"(User {self.id}) Could not find field at {xpath}")
             raise Exception
 
     def hit_enter_on_element(self, by_type, xpath):
@@ -65,7 +65,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            print(f"Could not find button at {xpath}")
+            print(f"(User {self.id}) Could not find button at {xpath}")
             return False
 
     def add_text_to_field_safe(self, by_type, xpath, text):
@@ -75,7 +75,7 @@ class PlanningCenterBot():
             time.sleep(self.wait)
             return True
         else:
-            print(f"Could not find field at {xpath}")
+            print(f"(User {self.id}) Could not find field at {xpath}")
             return False
 
     def hit_enter_on_element_safe(self, by_type, xpath):
@@ -111,5 +111,5 @@ class PlanningCenterBot():
         return elements
 
     def close_session(self):
-        print("Closing session")
+        print(f"(User {self.id}) Closing session")
         self.driver.close()
