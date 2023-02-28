@@ -8,6 +8,7 @@ from src.group_manager import GroupManager
 
 
 class MainProcess():
+
     def __init__(self, email, password, demo):
         self.email = email
         self.password = password
