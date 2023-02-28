@@ -389,6 +389,7 @@ def main_func(email=None, password=None, demo=False, app_run=False):
             proc.run_threads(command)
             proc.create_report_summary()
         if app_run and demo:
+            proc.get_group_data(6)
             proc.register_sessions(bot_count)
             if len(proc.sessions) > 0:
                 proc.run_threads("delete_groups")
