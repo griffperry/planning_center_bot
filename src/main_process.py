@@ -357,10 +357,8 @@ class MainProcess():
             self.groups[i] = data[i]
 
     def get_login_info(self):
-        # self.email = input("\nEmail: ")
-        # self.password = getpass()
-        self.email = "lgp0008@auburn.edu"
-        self.password = "botTester1"
+        self.email = input("\nEmail: ")
+        self.password = getpass()
         answer = input("Watch bots? [y/n]: ")
         self.demo = True if "y" in answer else False
 
