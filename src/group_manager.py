@@ -22,8 +22,8 @@ class GroupManager(PlanningCenterBot, StatusReport):
 
     def delete_group(self, group):
         name = group["name"]
-        self.add_text_to_field_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input", name)
-        self.hit_enter_on_element_safe(By.XPATH, "//*[@id='groups-index']/div/div[1]/div[2]/div/div[2]/div/input")
+        self.add_text_to_field_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]", name)
+        self.hit_enter_on_element_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]")
         success = self.click_button_safe(By.XPATH, "//*[@id='groups-index']/div/div[3]/div[2]/div[3]/div/div/div[2]/div[1]/div[3]/div")
         if success:
             self.go_to_settings_page()
@@ -86,7 +86,7 @@ class GroupManager(PlanningCenterBot, StatusReport):
         member_name = member.get("name")
         member_status = member.get("status")
         if len(group["added members"]) < 1:
-            add_member_xpath = "/html/body/main/div/div/div[2]/div/div/div/div[3]/div[2]/div/div"
+            add_member_xpath = "//div[contains(text(), 'Add a person')]"
         else:
             add_member_xpath = "//*[@id='group-member-finder']/div/div[3]/div[2]/div"
         self.click_button(By.XPATH, add_member_xpath)
@@ -139,13 +139,11 @@ class GroupManager(PlanningCenterBot, StatusReport):
         return success, result_xpath
 
     def promote_member_to_leader(self, group, member_name):
-        div_slot = "div"
-        if len(group["added members"]) > 1:
-            sorted_members = sorted(group["added members"])
-            member_position = sorted_members.index(member_name) + 1
-            div_slot = f"div[{member_position}]"
-        promote_xpath = f"//*[@id='group-member-finder']/div/div[5]/div[2]/{div_slot}/div[5]/div/div"
-        self.click_button(By.XPATH, promote_xpath)
+        members = self.attempt_find_elements(By.XPATH, "//div[contains(@aria-label, 'Edit membership role')]")
+        sorted_members = sorted(group["added members"])
+        member_position = sorted_members.index(member_name)
+        members[member_position].click()
+        time.sleep(self.wait)
         self.click_button(By.XPATH, "/html/body/div[2]/div/div[2]/div/form/fieldset[1]/div[1]/label")
         self.dont_notify_by_email()
         self.click_button(By.ID, "commit")
