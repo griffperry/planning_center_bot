@@ -83,12 +83,13 @@ class GroupManager(PlanningCenterBot, StatusReport):
         return True
 
     def add_member_to_group(self, group, member):
+        time.sleep(1)
         member_name = member.get("name")
         member_status = member.get("status")
         if len(group["added members"]) < 1:
             add_member_xpath = "//div[contains(text(), 'Add a person')]"
         else:
-            add_member_xpath = "//*[@id='group-member-finder']/div/div[3]/div[2]/div"
+            add_member_xpath = "//div[contains(text(), 'Add person')]"
         self.click_button(By.XPATH, add_member_xpath)
         success = self.search_and_add_member(group, member)
         if "leader" in member_status and success:
@@ -139,6 +140,7 @@ class GroupManager(PlanningCenterBot, StatusReport):
         return success, result_xpath
 
     def promote_member_to_leader(self, group, member_name):
+        time.sleep(1)
         members = self.attempt_find_elements(By.XPATH, "//div[contains(@aria-label, 'Edit membership role')]")
         sorted_members = sorted(group["added members"])
         member_position = sorted_members.index(member_name)

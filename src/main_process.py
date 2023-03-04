@@ -231,7 +231,7 @@ class MainProcess():
                     1: {
                         "name": "Josh Smith",
                         "status": "co-leader",
-                        "email": None, # TODO: Do we require co-leader email?
+                        "email": None,
                     },
                 },
                 "added members": [],
@@ -383,7 +383,7 @@ def main_func(email=None, password=None, demo=False, app_run=False):
         if not app_run and command not in ["create_groups", "delete_groups"]:
             print("Invalid function command.")
             sys.exit(1)
-        bot_count = 1 if len(proc.groups) == 1 else 2
+        bot_count = 1 if len(proc.groups) == 1 else 3
         proc.register_sessions(bot_count)
         if len(proc.sessions) > 0:
             proc.run_threads(command)
