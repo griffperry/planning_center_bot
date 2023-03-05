@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 from src.main_process import main_func
+from src.data_generator import DataGenerator
 from tkinter import *
+from tkinter import filedialog
 import sys
 
 
@@ -9,24 +11,41 @@ def upload_data():
     global upload_screen
     upload_screen = Toplevel(main_screen)
     upload_screen.title("Upload Small Group Data")
-    upload_screen.geometry("300x250")
-    global file
+    upload_screen.geometry("325x175")
     global file_entry
-    file = StringVar()
-    file_lable = Label(upload_screen, text="")
-    file_lable.pack()
-    file_entry = Entry(upload_screen, textvariable=file)
-    file_entry.pack()
+    global filename
+    filename = StringVar()
+    global status_label
+    status_label = Label(upload_screen, text="")
+    file_entry = Entry(upload_screen, textvariable=filename)
+    browse_button = Button(upload_screen, text="Browse", width=10, height=1, command=browse)
+    verify_button = Button(upload_screen, text="Submit Small Groups", width=20, height=1, command=verify)
     Label(upload_screen, text="").pack()
-    Button(upload_screen, text="Upload", width=10, height=1, bg="green", command=upload_button).pack()
+    file_entry.pack()
+    browse_button.pack()
+    Label(upload_screen, text="").pack()
+    verify_button.pack()
+    status_label.pack()
 
-def upload_button():
-    file_info = file.get()
-    data = open(file_info, "w")
-    data.write(file_info + "\n")
-    data.close()
+def browse():
+    status_label.configure(text="")
+    filename = filedialog.askopenfilename(initialdir = "/",
+                                          title = "Select a File",
+                                          filetypes = (("Excel files", "*.xlsx*"),)
+                                        )
     file_entry.delete(0, END)
-    Label(upload_screen, text="Small Groups uploaded", fg="green", font=("calibri", 11)).pack()
+    file_entry.insert(0, filename)
+
+def verify():
+    if filename.get():
+        dg = DataGenerator()
+        if dg.submit_data(filename.get()):
+            file_entry.delete(0, END)
+            status_label.configure(text="Small Groups Verified", fg="green", font=("calibri", 11))
+        else:
+            status_label.configure(text="Error with Small Group Data", fg="red", font=("calibri", 11))
+    else:
+        status_label.configure(text="Please Submit Small Group Data", fg="red", font=("calibri", 11))
 
 def login():
     global login_screen

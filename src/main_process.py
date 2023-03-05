@@ -4,7 +4,7 @@ import time
 from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
 from src.group_manager import GroupManager
-# from src.data_generator import DataGenerator
+from src.data_generator import DataGenerator
 
 
 class MainProcess():
@@ -73,7 +73,8 @@ class MainProcess():
         print(f"Finished in {total_time} seconds")
 
     def get_group_data(self, num_groups):
-        # data = DataGenerator()
+        dg = DataGenerator()
+        data = dg.verify_data("test_groups.xlsx")
         data = {
             0: {
                 "name": "test group 1",
