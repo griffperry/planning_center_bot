@@ -19,5 +19,5 @@ clean: install data
 
 .PHONY: executable
 executable:
-	pyinstaller --onefile .\small_groups_creator.py .\src\main_process.py .\src\group_manager.py .\src\planning_center_bot.py
+	pyinstaller --icon=daystar_logo.ico --onefile .\small_groups_creator.py .\src\main_process.py .\src\group_manager.py .\src\planning_center_bot.py
 	echo "Executable located at ./dist/small_groups_creator.exe"
