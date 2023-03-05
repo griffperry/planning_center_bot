@@ -21,6 +21,7 @@ class GroupManager(PlanningCenterBot, StatusReport):
         super().__init__()
 
     def delete_group(self, group):
+        time.sleep(1)
         name = group["name"]
         self.add_text_to_field_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]", name)
         self.hit_enter_on_element_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]")

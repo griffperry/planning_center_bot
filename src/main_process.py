@@ -372,27 +372,22 @@ class MainProcess():
                 f.write(report)
         f.close()
 
-def main_func(email=None, password=None, demo=False, app_run=False):
+def main_func(email=None, password=None, demo=False, app_run=False, command=None):
     proc = MainProcess(email, password, demo)
     proc.get_group_data(6)
+    bot_count = 1 if len(proc.groups) == 1 else 3
 
     if not app_run:
         proc.get_login_info()
     try:
-        command = sys.argv[-1]
-        if not app_run and command not in ["create_groups", "delete_groups"]:
+        command = sys.argv[-1] if not app_run else command
+        if command not in ["create_groups", "delete_groups"]:
             print("Invalid function command.")
             sys.exit(1)
-        bot_count = 1 if len(proc.groups) == 1 else 3
         proc.register_sessions(bot_count)
         if len(proc.sessions) > 0:
             proc.run_threads(command)
             proc.create_report_summary()
-        if app_run and demo:
-            proc.get_group_data(6)
-            proc.register_sessions(bot_count)
-            if len(proc.sessions) > 0:
-                proc.run_threads("delete_groups")
         return True
     except Exception:
         trace_back_str = traceback.format_exc()

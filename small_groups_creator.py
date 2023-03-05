@@ -33,7 +33,6 @@ def login():
     login_screen = Toplevel(main_screen)
     login_screen.title("Login to Planning Center")
     login_screen.geometry("300x300")
-    Label(login_screen, text="Please enter details below to begin").pack()
     Label(login_screen, text="").pack()
     global username_verify
     global password_verify
@@ -55,14 +54,16 @@ def login():
     password_login_entry.pack()
     Label(login_screen, text="").pack()
 
-    Label(login_screen, text="Demo mode will delete groups at the end.\nWould you like to demo? [yes/no].").pack()
+    Label(login_screen, text="Would you like to demo? [yes/no].").pack()
     demo_entry = Entry(login_screen, textvariable=demo_verify)
     demo_entry.pack()
     Label(login_screen, text="").pack()
 
-    Button(login_screen, text="Login and Start", width=18, height=1, command=login_verify).pack()
+    Button(login_screen, text="Create Groups", width=18, height=1, command=create_groups).pack()
+    Label(login_screen, text="").pack()
+    Button(login_screen, text="Delete Groups", width=18, height=1, command=delete_groups).pack()
 
-def login_verify():
+def create_groups():
     username1 = username_verify.get()
     password1 = password_verify.get()
     demo1 = demo_verify.get().lower()
@@ -70,7 +71,23 @@ def login_verify():
     password_login_entry.delete(0, END)
     demo_entry.delete(0, END)
     demo_flag = True if "y" in demo1 else False
-    success = main_func(username1, password1, demo=demo_flag, app_run=True)
+    login_screen.destroy()
+    success = main_func(username1, password1, demo=demo_flag, app_run=True, command="create_groups")
+    if success:
+        report_sucess()
+    else:
+        report_failure()
+
+def delete_groups():
+    username1 = username_verify.get()
+    password1 = password_verify.get()
+    demo1 = demo_verify.get().lower()
+    username_login_entry.delete(0, END)
+    password_login_entry.delete(0, END)
+    demo_entry.delete(0, END)
+    demo_flag = True if "y" in demo1 else False
+    login_screen.destroy()
+    success = main_func(username1, password1, demo=demo_flag, app_run=True, command="delete_groups")
     if success:
         report_sucess()
     else:
@@ -78,7 +95,7 @@ def login_verify():
 
 def report_sucess():
     global login_success_screen
-    login_success_screen = Toplevel(login_screen)
+    login_success_screen = Tk()
     login_success_screen.title("Success")
     login_success_screen.geometry("250x100")
     Label(login_success_screen, text="Groups were created").pack()
@@ -87,7 +104,7 @@ def report_sucess():
 
 def report_failure():
     global failure_screen
-    failure_screen = Toplevel(login_screen)
+    failure_screen = Tk()
     failure_screen.title("Success")
     failure_screen.geometry("150x100")
     Label(failure_screen, text="Login failed").pack()
@@ -95,7 +112,6 @@ def report_failure():
 
 def exit_program():
     login_success_screen.destroy()
-    login_screen.destroy()
     main_screen.destroy()
     sys.exit(1)
 
@@ -105,7 +121,7 @@ def delete_failure():
 def main_account_screen():
     global main_screen
     main_screen = Tk()
-    main_screen.geometry("300x250")
+    main_screen.geometry("300x175")
     main_screen.title("Small Group Creator")
     Label(text="").pack()
     Button(text="Upload Small Group Data", height="2", width="30", command=upload_data).pack()
