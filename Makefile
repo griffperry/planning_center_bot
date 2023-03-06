@@ -1,20 +1,20 @@
 .PHONY: all
-all: install data executable
+all: install executable
 
 .PHONY: install
 install:
 	pip install -U -r requirements.txt
 
 .PHONY: data
-data:
+data: install
 	echo "Gen Data"
 
 .PHONY: groups
-groups: install data
+groups: install
 	python .\small_groups_creator.py create_groups
 
 .PHONY: clean
-clean: install data
+clean: install
 	python .\small_groups_creator.py delete_groups
 
 .PHONY: executable
