@@ -51,8 +51,12 @@ class MainProcess():
             while len(self.groups) > 0:
                 group = self.groups.pop(next(iter(self.groups)))
                 try:
+                    name = group["name"]
                     if bot.delete_group(group):
-                        print(f"(User {bot.id}) Group '{group['name']}' deleted.")
+                        bot.add_group_status(name, f"(User {bot.id}) Group '{name}' deleted.")
+                    else:
+                        bot.add_group_status(name, f"(User {bot.id}) Group '{name}' was not deleted.")
+                    bot.reports.append(bot.create_report(name))
                 except Exception as error:
                     trace_back_str = traceback.format_exc()
                     print(trace_back_str)

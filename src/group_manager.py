@@ -22,6 +22,7 @@ class GroupManager(PlanningCenterBot, StatusReport):
 
     def delete_group(self, group):
         time.sleep(1)
+        group_deleted = False
         name = group["name"]
         self.add_text_to_field_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]", name)
         self.hit_enter_on_element_safe(By.XPATH, "//input[contains(@placeholder, 'Search by filter')]")
@@ -32,13 +33,12 @@ class GroupManager(PlanningCenterBot, StatusReport):
             if selected_group and name == selected_group.text:
                 self.select_archive_and_delete()
                 group["added members"] = []
-                return True
+                group_deleted = True
             else:
                 print(f"(User {self.id}) Selected wrong group.")
-                return False
         else:
             print(f"(User {self.id}) Search for group '{name}' failed.")
-            return False
+        return group_deleted
 
     def select_archive_and_delete(self):
         self.click_button_safe(By.XPATH, "/html/body/main/div/div/section/header/div/a")
