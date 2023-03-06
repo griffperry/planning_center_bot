@@ -3,6 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.service import Service as ChromeService
+from subprocess import CREATE_NO_WINDOW
 
 
 class PlanningCenterBot():
@@ -14,7 +16,9 @@ class PlanningCenterBot():
         if not self.demo:
             options.add_argument('-headless')
         options.add_argument('log-level=3')
-        self.driver = webdriver.Chrome(options=options)
+        chrome_service = ChromeService('chromedriver')
+        chrome_service.creation_flags = CREATE_NO_WINDOW
+        self.driver = webdriver.Chrome(service=chrome_service, options=options)
         self.driver.get("https://login.planningcenteronline.com/login/new")
         self.add_text_to_field_safe(By.ID, "email", self.email)
         self.add_text_to_field_safe(By.ID, "password", self.password)

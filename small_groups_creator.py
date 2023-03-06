@@ -5,17 +5,19 @@ from src.data_generator import DataGenerator
 from tkinter import *
 from tkinter import filedialog
 import sys
+import time
 
 
 def upload_data():
     global upload_screen
+    global file_entry
+    global filename
+    global status_label
+
     upload_screen = Toplevel(main_screen)
     upload_screen.title("Upload Small Group Data")
     upload_screen.geometry("325x175")
-    global file_entry
-    global filename
     filename = StringVar()
-    global status_label
     status_label = Label(upload_screen, text="")
     file_entry = Entry(upload_screen, textvariable=filename)
     browse_button = Button(upload_screen, text="Browse", width=10, height=1, command=browse)
@@ -117,7 +119,7 @@ def report_sucess():
     login_success_screen = Tk()
     login_success_screen.title("Success")
     login_success_screen.geometry("250x100")
-    Label(login_success_screen, text="Groups were created").pack()
+    Label(login_success_screen, text="All done!").pack()
     Label(login_success_screen, text="Hit OK to finish").pack()
     Button(login_success_screen, text="OK", command=exit_program).pack()
 
