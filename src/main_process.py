@@ -73,7 +73,7 @@ class MainProcess():
         print(f"Finished in {total_time} seconds")
 
     def get_group_data(self, num_groups):
-        dg = DataGenerator()
+        dg = DataGenerator()  # This will return data from excel spreadsheet
         data = dg.verify_data("test_groups.xlsx")
         data = {
             0: {
@@ -375,7 +375,7 @@ class MainProcess():
 
 def main_func(email=None, password=None, demo=False, app_run=False, command=None):
     proc = MainProcess(email, password, demo)
-    proc.get_group_data(6)
+    proc.get_group_data(6)  # Just because not officially reading excel file
     bot_count = 1 if len(proc.groups) == 1 else 3
 
     if not app_run:
