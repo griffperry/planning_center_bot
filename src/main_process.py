@@ -369,7 +369,7 @@ class MainProcess():
         self.demo = True if "y" in answer else False
 
     def create_report_summary(self):
-        file = "small_group_creator_report.txt"
+        file = "small_groups_report.txt"
         open(file, "w").close()
         f = open(file, "w")
         for session in self.sessions:

@@ -4,20 +4,22 @@ from src.main_process import main_func
 from src.data_generator import DataGenerator
 from tkinter import *
 from tkinter import filedialog
+from tkinter import ttk
 import sys
 import time
+import tkinter as tk
 
 
 class UserInterface():
 
     def main_account_screen(self):
         self.main_screen = Tk()
-        self.main_screen.geometry("300x175")
-        self.main_screen.title("Small Group Creator")
+        self.main_screen.geometry("300x120")
+        self.main_screen.title("Small Groups Manager")
         Label(text="").pack()
-        Button(text="Upload Small Group Data", height="2", width="30", command=self.upload_data).pack()
+        ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
-        Button(text="Login", height="2", width="30", command=self.login).pack()
+        ttk.Button(self.main_screen, text="Login", command=self.login).pack()
         self.main_screen.mainloop()
 
     def upload_data(self):
@@ -31,12 +33,12 @@ class UserInterface():
         self.file_entry.pack()
 
         self.browser_used = False
-        browse_button = Button(self.upload_screen, text="Browse", width=10, height=1, command=self.browse)
+        browse_button = ttk.Button(self.upload_screen, text="Browse", command=self.browse)
         browse_button.pack()
         Label(self.upload_screen, text="").pack()
 
         self.upload_success = False
-        verify_button = Button(self.upload_screen, text="Submit Small Groups", width=20, height=1, command=self.verify)
+        verify_button = ttk.Button(self.upload_screen, text="Submit Small Groups", command=self.verify)
         verify_button.pack()
         self.status_label = Label(self.upload_screen, text="")
         self.status_label.pack()
@@ -96,9 +98,9 @@ class UserInterface():
         self.demo_entry.pack()
         Label(self.login_screen, text="").pack()
 
-        Button(self.login_screen, text="Create Groups", width=18, height=1, command=self.create_groups).pack()
+        ttk.Button(self.login_screen, text="Create Groups", command=self.create_groups).pack()
         Label(self.login_screen, text="").pack()
-        Button(self.login_screen, text="Delete Groups", width=18, height=1, command=self.delete_groups).pack()
+        ttk.Button(self.login_screen, text="Delete Groups", command=self.delete_groups).pack()
 
     def create_groups(self):
         username1 = self.username_verify.get()
@@ -138,7 +140,7 @@ class UserInterface():
         self.login_success_screen.geometry("250x100")
         Label(self.login_success_screen, text="All done!").pack()
         Label(self.login_success_screen, text="Hit OK to exit").pack()
-        Button(self.login_success_screen, text="OK", command=self.exit_program).pack()
+        ttk.Button(self.login_success_screen, text="OK", command=self.exit_program).pack()
 
     def exit_program(self):
         self.login_success_screen.destroy()
@@ -150,7 +152,7 @@ class UserInterface():
         self.failure_screen.title("Success")
         self.failure_screen.geometry("150x100")
         Label(self.failure_screen, text="Login failed").pack()
-        Button(self.failure_screen, text="OK", command=self.delete_failure).pack()
+        ttk.Button(self.failure_screen, text="OK", command=self.delete_failure).pack()
 
     def delete_failure(self):
         self.failure_screen.destroy()
