@@ -8,151 +8,157 @@ import sys
 import time
 
 
-def upload_data():
-    global upload_screen
-    global file_entry
-    global filename
-    global status_label
+class UserInterface():
 
-    upload_screen = Toplevel(main_screen)
-    upload_screen.title("Upload Small Group Data")
-    upload_screen.geometry("325x175")
-    filename = StringVar()
-    status_label = Label(upload_screen, text="")
-    file_entry = Entry(upload_screen, textvariable=filename)
-    browse_button = Button(upload_screen, text="Browse", width=10, height=1, command=browse)
-    verify_button = Button(upload_screen, text="Submit Small Groups", width=20, height=1, command=verify)
-    Label(upload_screen, text="").pack()
-    file_entry.pack()
-    browse_button.pack()
-    Label(upload_screen, text="").pack()
-    verify_button.pack()
-    status_label.pack()
+    def main_account_screen(self):
+        self.main_screen = Tk()
+        self.main_screen.geometry("300x175")
+        self.main_screen.title("Small Group Creator")
+        Label(text="").pack()
+        Button(text="Upload Small Group Data", height="2", width="30", command=self.upload_data).pack()
+        Label(text="").pack()
+        Button(text="Login", height="2", width="30", command=self.login).pack()
+        self.main_screen.mainloop()
 
-def browse():
-    status_label.configure(text="")
-    filename = filedialog.askopenfilename(initialdir = "/",
-                                          title = "Select a File",
-                                          filetypes = (("Excel files", "*.xlsx*"),)
-                                        )
-    file_entry.delete(0, END)
-    file_entry.insert(0, filename)
+    def upload_data(self):
+        self.upload_screen = Toplevel(self.main_screen)
+        self.upload_screen.title("Upload Small Group Data")
+        self.upload_screen.geometry("325x175")
+        Label(self.upload_screen, text="").pack()
 
-def verify():
-    if filename.get():
-        dg = DataGenerator()
-        if dg.submit_data(filename.get()):
-            file_entry.delete(0, END)
-            status_label.configure(text="Small Groups Verified", fg="green", font=("calibri", 11))
+        self.filename = StringVar()
+        self.file_entry = Entry(self.upload_screen, textvariable=self.filename)
+        self.file_entry.pack()
+
+        self.browser_used = False
+        browse_button = Button(self.upload_screen, text="Browse", width=10, height=1, command=self.browse)
+        browse_button.pack()
+        Label(self.upload_screen, text="").pack()
+
+        self.upload_success = False
+        verify_button = Button(self.upload_screen, text="Submit Small Groups", width=20, height=1, command=self.verify)
+        verify_button.pack()
+        self.status_label = Label(self.upload_screen, text="")
+        self.status_label.pack()
+
+    def browse(self):
+        self.browser_used = True
+        self.status_label.configure(text="")
+        self.filename = filedialog.askopenfilename(initialdir = "/",
+                                                   title = "Select a File",
+                                                   filetypes = (("Excel files", "*.xlsx*"),)
+                                                )
+        self.file_entry.delete(0, END)
+        self.file_entry.insert(0, self.filename)
+
+    def verify(self):
+        filename = self.filename if self.browser_used else self.filename.get()
+        if filename:
+            dg = DataGenerator()
+            if dg.submit_data(filename):
+                self.file_entry.delete(0, END)
+                self.upload_success = True
+                self.set_upload_status("Small Groups Verified")
+            else:
+                self.set_upload_status("Error with Small Group Data")
         else:
-            status_label.configure(text="Error with Small Group Data", fg="red", font=("calibri", 11))
-    else:
-        status_label.configure(text="Please Submit Small Group Data", fg="red", font=("calibri", 11))
+            self.set_upload_status("Please Submit Small Group Data")
 
-def login():
-    global login_screen
-    login_screen = Toplevel(main_screen)
-    login_screen.title("Login to Planning Center")
-    login_screen.geometry("300x300")
-    Label(login_screen, text="").pack()
-    global username_verify
-    global password_verify
-    global demo_verify
-    username_verify = StringVar()
-    password_verify = StringVar()
-    demo_verify = StringVar()
-    global username_login_entry
-    global password_login_entry
-    global demo_entry
+    def set_upload_status(self, text):
+        color = "green" if self.upload_success else "red"
+        self.status_label.configure(text=text, fg=color, font=("calibri", 11))
+        if self.upload_success:
+            self.upload_screen.update()
+            time.sleep(3)
+            self.upload_screen.destroy()
 
-    Label(login_screen, text="Username * ").pack()
-    username_login_entry = Entry(login_screen, textvariable=username_verify)
-    username_login_entry.pack()
-    Label(login_screen, text="").pack()
+    def login(self):
+        self.login_screen = Toplevel(self.main_screen)
+        self.login_screen.title("Login to Planning Center")
+        self.login_screen.geometry("300x300")
+        Label(self.login_screen, text="").pack()
 
-    Label(login_screen, text="Password * ").pack()
-    password_login_entry = Entry(login_screen, textvariable=password_verify, show= '*')
-    password_login_entry.pack()
-    Label(login_screen, text="").pack()
+        Label(self.login_screen, text="Username * ").pack()
+        self.username_verify = StringVar()
+        self.username_login_entry = Entry(self.login_screen, textvariable=self.username_verify)
+        self.username_login_entry.pack()
+        Label(self.login_screen, text="").pack()
 
-    Label(login_screen, text="Would you like to demo? [yes/no].").pack()
-    demo_entry = Entry(login_screen, textvariable=demo_verify)
-    demo_entry.pack()
-    Label(login_screen, text="").pack()
+        Label(self.login_screen, text="Password * ").pack()
+        self.password_verify = StringVar()
+        self.password_login_entry = Entry(self.login_screen, textvariable=self.password_verify, show= '*')
+        self.password_login_entry.pack()
+        Label(self.login_screen, text="").pack()
 
-    Button(login_screen, text="Create Groups", width=18, height=1, command=create_groups).pack()
-    Label(login_screen, text="").pack()
-    Button(login_screen, text="Delete Groups", width=18, height=1, command=delete_groups).pack()
+        Label(self.login_screen, text="Would you like to demo? [yes/no].").pack()
+        self.demo_verify = StringVar()
+        self.demo_entry = Entry(self.login_screen, textvariable=self.demo_verify)
+        self.demo_entry.pack()
+        Label(self.login_screen, text="").pack()
 
-def create_groups():
-    username1 = username_verify.get()
-    password1 = password_verify.get()
-    demo1 = demo_verify.get().lower()
-    username_login_entry.delete(0, END)
-    password_login_entry.delete(0, END)
-    demo_entry.delete(0, END)
-    demo_flag = True if "y" in demo1 else False
-    login_screen.destroy()
-    success = main_func(username1, password1, demo=demo_flag, app_run=True, command="create_groups")
-    if success:
-        report_sucess()
-    else:
-        report_failure()
+        Button(self.login_screen, text="Create Groups", width=18, height=1, command=self.create_groups).pack()
+        Label(self.login_screen, text="").pack()
+        Button(self.login_screen, text="Delete Groups", width=18, height=1, command=self.delete_groups).pack()
 
-def delete_groups():
-    username1 = username_verify.get()
-    password1 = password_verify.get()
-    demo1 = demo_verify.get().lower()
-    username_login_entry.delete(0, END)
-    password_login_entry.delete(0, END)
-    demo_entry.delete(0, END)
-    demo_flag = True if "y" in demo1 else False
-    login_screen.destroy()
-    success = main_func(username1, password1, demo=demo_flag, app_run=True, command="delete_groups")
-    if success:
-        report_sucess()
-    else:
-        report_failure()
+    def create_groups(self):
+        username1 = self.username_verify.get()
+        self.username_login_entry.delete(0, END)
+        password1 = self.password_verify.get()
+        self.password_login_entry.delete(0, END)
+        demo1 = self.demo_verify.get().lower()
+        self.demo_entry.delete(0, END)
+        demo_flag = True if "y" in demo1 else False
 
-def report_sucess():
-    global login_success_screen
-    login_success_screen = Tk()
-    login_success_screen.title("Success")
-    login_success_screen.geometry("250x100")
-    Label(login_success_screen, text="All done!").pack()
-    Label(login_success_screen, text="Hit OK to finish").pack()
-    Button(login_success_screen, text="OK", command=exit_program).pack()
+        self.login_screen.destroy()
+        success = main_func(username1, password1, demo=demo_flag, app_run=True, command="create_groups")
+        if success:
+            self.report_sucess()
+        else:
+            self.report_failure()
 
-def report_failure():
-    global failure_screen
-    failure_screen = Tk()
-    failure_screen.title("Success")
-    failure_screen.geometry("150x100")
-    Label(failure_screen, text="Login failed").pack()
-    Button(failure_screen, text="OK", command=delete_failure).pack()
+    def delete_groups(self):
+        username1 = self.username_verify.get()
+        self.username_login_entry.delete(0, END)
+        password1 = self.password_verify.get()
+        self.password_login_entry.delete(0, END)
+        demo1 = self.demo_verify.get().lower()
+        self.demo_entry.delete(0, END)
+        demo_flag = True if "y" in demo1 else False
 
-def exit_program():
-    login_success_screen.destroy()
-    main_screen.destroy()
-    sys.exit(1)
+        self.login_screen.destroy()
+        success = main_func(username1, password1, demo=demo_flag, app_run=True, command="delete_groups")
+        if success:
+            self.report_sucess()
+        else:
+            self.report_failure()
 
-def delete_failure():
-    failure_screen.destroy()
+    def report_sucess(self):
+        self.login_success_screen = Tk()
+        self.login_success_screen.title("Success")
+        self.login_success_screen.geometry("250x100")
+        Label(self.login_success_screen, text="All done!").pack()
+        Label(self.login_success_screen, text="Hit OK to exit").pack()
+        Button(self.login_success_screen, text="OK", command=self.exit_program).pack()
 
-def main_account_screen():
-    global main_screen
-    main_screen = Tk()
-    main_screen.geometry("300x175")
-    main_screen.title("Small Group Creator")
-    Label(text="").pack()
-    Button(text="Upload Small Group Data", height="2", width="30", command=upload_data).pack()
-    Label(text="").pack()
-    Button(text="Login", height="2", width="30", command=login).pack()
-    main_screen.mainloop()
+    def exit_program(self):
+        self.login_success_screen.destroy()
+        self.main_screen.destroy()
+        sys.exit(1)
+
+    def report_failure(self):
+        self.failure_screen = Tk()
+        self.failure_screen.title("Success")
+        self.failure_screen.geometry("150x100")
+        Label(self.failure_screen, text="Login failed").pack()
+        Button(self.failure_screen, text="OK", command=self.delete_failure).pack()
+
+    def delete_failure(self):
+        self.failure_screen.destroy()
 
 if __name__ == "__main__":
     cmd_line = sys.argv[-1]
     if "create_groups" == cmd_line or "delete_groups" == cmd_line:
         main_func()
     else:
-        main_account_screen()
+        ui = UserInterface()
+        ui.main_account_screen()

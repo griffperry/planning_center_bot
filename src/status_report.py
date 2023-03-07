@@ -15,7 +15,8 @@ class StatusReport():
 
     def create_report(self, group_name):
         report = [self.group_status.get(group_name)]
-        for caveat in self.group_caveats.get(group_name):
-            report.append(caveat)
+        if self.group_caveats.get(group_name):
+            for caveat in self.group_caveats[group_name]:
+                report.append(caveat)
         report.append("\n")
         return "\n".join(report)
