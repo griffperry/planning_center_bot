@@ -3,8 +3,10 @@ import traceback
 import time
 from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 from src.group_manager import GroupManager
 from src.data_generator import DataGenerator
+from src.progress_bar import ProgressBar
 
 
 class MainProcess():
@@ -15,6 +17,7 @@ class MainProcess():
         self.demo = demo
         self.sessions = []
         self.groups = {}
+        self.completed_groups = []
 
     def setup_worker(self, id):
         bot = GroupManager(self.email, self.password, self.demo, id)
@@ -40,6 +43,7 @@ class MainProcess():
                 group = self.groups.pop(next(iter(self.groups)))
                 try:
                     bot.create_group(group)
+                    self.completed_groups.append("done")
                 except Exception as error:
                     trace_back_str = traceback.format_exc()
                     print(trace_back_str)
@@ -57,17 +61,18 @@ class MainProcess():
                     else:
                         bot.add_group_status(name, f"(User {bot.id}) Group '{name}' was not deleted.")
                     bot.reports.append(bot.create_report(name))
+                    self.completed_groups.append("done")
                 except Exception as error:
                     trace_back_str = traceback.format_exc()
                     print(trace_back_str)
                     sys.exit(1)
             bot.close_session()
 
-    def run_threads(self, command):
+    def run_threads(self):
         bot_count = len(self.sessions)
 
         func_ = self.handle_create_group
-        if command == "delete_groups":
+        if self.command == "delete_groups":
             func_ = self.handle_delete_group
 
         start_time = time.time()
@@ -75,6 +80,7 @@ class MainProcess():
             executor.map(func_, self.sessions)
         total_time = time.time() - start_time
         print(f"Finished in {total_time} seconds")
+        self.create_report_summary()
 
     def get_group_data(self, num_groups):
         dg = DataGenerator()  # This will return data from excel spreadsheet
@@ -380,19 +386,21 @@ class MainProcess():
 def main_func(email=None, password=None, demo=False, app_run=False, command=None):
     proc = MainProcess(email, password, demo)
     proc.get_group_data(6)  # Just because not officially reading excel file
-    bot_count = 1 if len(proc.groups) == 1 else 3
+    bot_count = len(proc.groups) if len(proc.groups) < 3 else 3
 
     if not app_run:
         proc.get_login_info()
     try:
-        command = sys.argv[-1] if not app_run else command
-        if command not in ["create_groups", "delete_groups"]:
+        proc.command = sys.argv[-1] if not app_run else command
+        if proc.command not in ["create_groups", "delete_groups"]:
             print("Invalid function command.")
             sys.exit(1)
         proc.register_sessions(bot_count)
         if len(proc.sessions) > 0:
-            proc.run_threads(command)
-            proc.create_report_summary()
+            # if app_run:
+            proc.pb = ProgressBar(proc.groups, proc.completed_groups)
+            Thread(target = proc.pb.start_progress).start()
+            Thread(target = proc.run_threads).start()
         return True
     except Exception:
         trace_back_str = traceback.format_exc()

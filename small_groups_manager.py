@@ -20,7 +20,6 @@ class UserInterface():
         ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Login", command=self.login).pack()
-        self.main_screen.mainloop()
 
     def upload_data(self):
         self.upload_screen = Toplevel(self.main_screen)
@@ -75,7 +74,8 @@ class UserInterface():
             self.upload_screen.destroy()
 
     def login(self):
-        self.login_screen = Toplevel(self.main_screen)
+        self.main_screen.destroy()
+        self.login_screen = Tk()
         self.login_screen.title("Login to Planning Center")
         self.login_screen.geometry("300x300")
         Label(self.login_screen, text="").pack()
@@ -112,7 +112,13 @@ class UserInterface():
         demo_flag = True if "y" in demo1 else False
 
         self.login_screen.destroy()
-        success = main_func(username1, password1, demo=demo_flag, app_run=True, command="create_groups")
+        success = main_func(
+                        username1,
+                        password1,
+                        demo=demo_flag,
+                        app_run=True,
+                        command="create_groups",
+                    )
         if success:
             self.report_sucess()
         else:
