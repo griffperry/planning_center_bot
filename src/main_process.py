@@ -43,7 +43,7 @@ class MainProcess():
                 group = self.groups.pop(next(iter(self.groups)))
                 try:
                     bot.create_group(group)
-                    self.completed_groups.append("done")
+                    self.completed_groups.append(group["name"])
                 except Exception as error:
                     trace_back_str = traceback.format_exc()
                     print(trace_back_str)
@@ -61,7 +61,7 @@ class MainProcess():
                     else:
                         bot.add_group_status(name, f"(User {bot.id}) Group '{name}' was not deleted.")
                     bot.reports.append(bot.create_report(name))
-                    self.completed_groups.append("done")
+                    self.completed_groups.append(name)
                 except Exception as error:
                     trace_back_str = traceback.format_exc()
                     print(trace_back_str)
@@ -386,7 +386,8 @@ class MainProcess():
 def main_func(email=None, password=None, demo=False, app_run=False, command=None):
     proc = MainProcess(email, password, demo)
     proc.get_group_data(6)  # Just because not officially reading excel file
-    bot_count = len(proc.groups) if len(proc.groups) < 3 else 3
+    num_groups = len(proc.groups)
+    bot_count = num_groups if num_groups < 3 else 3
 
     if not app_run:
         proc.get_login_info()
@@ -397,11 +398,16 @@ def main_func(email=None, password=None, demo=False, app_run=False, command=None
             sys.exit(1)
         proc.register_sessions(bot_count)
         if len(proc.sessions) > 0:
-            # if app_run:
-            proc.pb = ProgressBar(proc.groups, proc.completed_groups)
-            Thread(target = proc.pb.start_progress).start()
             Thread(target = proc.run_threads).start()
-        return True
+            if app_run:
+                proc.pb = ProgressBar(proc.groups, proc.completed_groups)
+                Thread(target = proc.pb.start_progress).start()
+            while len(proc.completed_groups) < num_groups:
+                time.sleep(3)
+            # if app_run: TODO: Fix process ended by wrong thread error
+            #     proc.pb.root.destroy()
+            return True
+        return False
     except Exception:
         trace_back_str = traceback.format_exc()
         print(trace_back_str)

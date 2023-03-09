@@ -19,17 +19,20 @@ class ProgressBar():
             percent_complete = float(1/self.num_groups)*100
             self.pbar['value'] += percent_complete
             self.value_label['text'] = self.update_progress_label()
+            self.value_label.update()
 
     def check_progress(self):
-        current_completed_groups = 0 #len(self.completed_groups)
-        while len(self.completed_groups) < self.num_groups:
-            time.sleep(1)
-            print(len(self.completed_groups))
+        current_completed_groups = 0
+        while len(self.completed_groups) < self.num_groups+1:
+            time.sleep(0.5)
             if len(self.completed_groups) > current_completed_groups:
                 self.progress()
                 current_completed_groups += 1
-                print(f"updated current count to {current_completed_groups}")
-        showinfo(message='The progress completed!')
+                if current_completed_groups == self.num_groups:
+                    break
+        self.value_label['text'] = "Complete"
+        self.value_label.update()
+        time.sleep(3)
         self.root.destroy()
 
     def start_progress(self):
@@ -46,11 +49,5 @@ class ProgressBar():
         self.value_label = ttk.Label(self.root, text=self.update_progress_label())
         self.value_label.grid(column=0, row=1, columnspan=2)
 
-        start_button = ttk.Button(
-            self.root,
-            text='Start',
-            command=self.check_progress
-        )
-        start_button.grid(column=0, row=2, padx=10, pady=10, sticky=tk.E)
-
+        self.root.after(1000, self.check_progress)
         self.root.mainloop()

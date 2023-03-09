@@ -20,6 +20,7 @@ class UserInterface():
         ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Login", command=self.login).pack()
+        self.main_screen.mainloop()
 
     def upload_data(self):
         self.upload_screen = Toplevel(self.main_screen)
@@ -150,7 +151,6 @@ class UserInterface():
 
     def exit_program(self):
         self.login_success_screen.destroy()
-        self.main_screen.destroy()
         sys.exit(1)
 
     def report_failure(self):
