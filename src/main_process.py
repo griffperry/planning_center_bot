@@ -3,21 +3,18 @@ import traceback
 import time
 from getpass import getpass
 from concurrent.futures import ThreadPoolExecutor
-from threading import Thread
 from src.group_manager import GroupManager
 from src.data_generator import DataGenerator
-from src.progress_bar import ProgressBar
 
 
 class MainProcess():
 
-    def __init__(self, email, password, demo):
+    def __init__(self, email=None, password=None, demo=None, completed_groups=None):
         self.email = email
         self.password = password
         self.demo = demo
+        self.completed_groups = completed_groups
         self.sessions = []
-        self.groups = {}
-        self.completed_groups = []
 
     def setup_worker(self, id):
         bot = GroupManager(self.email, self.password, self.demo, id)
@@ -82,295 +79,16 @@ class MainProcess():
         print(f"Finished in {total_time} seconds")
         self.create_report_summary()
 
-    def get_group_data(self, num_groups):
-        dg = DataGenerator()  # This will return data from excel spreadsheet
-        data = dg.verify_data("test_groups.xlsx")
-        data = {
-            0: {
-                "name": "test group 1",
-                "members": {
-                    0: {
-                        "name": "Griff",
-                        "status": "leader",
-                        "email": "lgp0008@auburn.edu",
-                    },
-                    1: {
-                        "name": "Dont Exist User",
-                        "status": "co-leader",
-                        "email": None, # TODO: Do we require co-leader email?
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": "Test description",
-                "contact_email": "test@gmail.com",
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Childcare Available",
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Freedom",
-                        "Book Study",
-                        "Marriage",
-                        "Finance",
-                        "Outreach",
-                        "Fitness/Health",
-                        "Families",
-                        "Fun/Hangout/Fellowship",
-                        "Students",
-                        "College Students",
-                        "Other",
-                        "Outdoor",
-                        "Kids",
-                    ],
-                    "group age": [
-                        "All ages welcome",
-                        "Under 18",
-                        "18-30",
-                        "31-55",
-                        "55+",
-                        "18 and up",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-            1: {
-                "name": "test group 2",
-                "members": {
-                    0: {
-                        "name": "Griff Perry",
-                        "status": "leader",
-                        "email": "lgp0008@auburn.edu",
-                    },
-                    1: {
-                        "name": "Josh Smith",
-                        "status": "co-leader",
-                        "email": None,
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": "Test description",
-                "contact_email": "lgp0008@auburn.edu",
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Finance",
-                        "Students",
-                        "College Students",
-                        "Outdoor",
-                    ],
-                    "group age": [
-                        "18-30",
-                        "31-55",
-                        "55+",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-            2: {
-                "name": "test group 3",
-                "members": {
-                    0: {
-                        "name": "Alex Springer",
-                        "status": "leader",
-                        "email": "springer.alex.h@gmail.com",
-                    },
-                    1: {
-                        "name": "Griff",
-                        "status": "co-leader",
-                        "email": None,
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": None,
-                "contact_email": None,
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Finance",
-                        "Students",
-                        "College Students",
-                        "Outdoor",
-                    ],
-                    "group age": [
-                        "18-30",
-                        "31-55",
-                        "55+",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-            3: {
-                "name": "test group 4",
-                "members": {
-                    0: {
-                        "name": "Alex",
-                        "status": "leader",
-                        "email": "lgp0008@auburn.edu",
-                    },
-                    1: {
-                        "name": "Josh Smith",
-                        "status": "co-leader",
-                        "email": None,
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": "Test description",
-                "contact_email": "test@gmail.com",
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Finance",
-                        "Students",
-                        "College Students",
-                        "Outdoor",
-                    ],
-                    "group age": [
-                        "18-30",
-                        "31-55",
-                        "55+",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-            4: {
-                "name": "test group 5",
-                "members": {
-                    0: {
-                        "name": "Griff Perry",
-                        "status": "leader",
-                        "email": "lgp0008@auburn.edu",
-                    },
-                    1: {
-                        "name": "Alex Springer",
-                        "status": "co-leader",
-                        "email": None,
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": "Test description",
-                "contact_email": "lgp0008@auburn.edu",
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Finance",
-                        "Students",
-                        "College Students",
-                        "Outdoor",
-                    ],
-                    "group age": [
-                        "18-30",
-                        "31-55",
-                        "55+",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-            5: {
-                "name": "test group 6",
-                "members": {
-                    0: {
-                        "name": "Alex Sp",
-                        "status": "leader",
-                        "email": "springer.alex.h@gmail.com",
-                    },
-                    1: {
-                        "name": "Griff Perry",
-                        "status": "co-leader",
-                        "email": None,
-                    },
-                },
-                "added members": [],
-                "schedule": "Thursday @ 11:30 AM Weekly",
-                "description": "Test description",
-                "contact_email": "lgp0008@auburn.edu",
-                "address": "11306 County Line Rd, Madison, AL 35756",
-                "tags": {
-                    "campus": "Madison",
-                    "year": "2023",
-                    "season": "Winter/Spring",
-                    "regularity": "Weekly",
-                    "group attributes": [
-                        "Online group",
-                    ],
-                    "group type": [
-                        "Prayer",
-                        "Bible Study",
-                        "Finance",
-                        "Students",
-                        "College Students",
-                        "Outdoor",
-                    ],
-                    "group age": [
-                        "18-30",
-                        "31-55",
-                        "55+",
-                    ],
-                    "group members": "Men",
-                    "day of week": "Thursday",
-                },
-            },
-        }
-
-        for i in range(num_groups):
-            self.groups[i] = data[i]
+    def get_group_data(self):
+        dg = DataGenerator()
+        dg.verify_data("test_groups.xlsx") # This will verify and return data from excel spreadsheet
+        return dg.data
 
     def get_login_info(self):
-        self.email = input("\nEmail: ")
-        self.password = getpass()
+        # self.email = input("\nEmail: ")
+        # self.password = getpass()
+        self.email = "lgp0008@auburn.edu"
+        self.password = "botTester1"
         answer = input("Watch bots? [y/n]: ")
         self.demo = True if "y" in answer else False
 
@@ -383,32 +101,25 @@ class MainProcess():
                 f.write(report)
         f.close()
 
-def main_func(email=None, password=None, demo=False, app_run=False, command=None):
-    proc = MainProcess(email, password, demo)
-    proc.get_group_data(6)  # Just because not officially reading excel file
-    num_groups = len(proc.groups)
-    bot_count = num_groups if num_groups < 3 else 3
+    def main_func(self, app_run=False, command=None):
+        self.success = False
+        if not app_run:
+            self.groups = self.get_group_data()
+            self.completed_groups = []
+        num_groups = len(self.groups)
+        bot_count = num_groups if num_groups < 3 else 3
 
-    if not app_run:
-        proc.get_login_info()
-    try:
-        proc.command = sys.argv[-1] if not app_run else command
-        if proc.command not in ["create_groups", "delete_groups"]:
-            print("Invalid function command.")
-            sys.exit(1)
-        proc.register_sessions(bot_count)
-        if len(proc.sessions) > 0:
-            Thread(target = proc.run_threads).start()
-            if app_run:
-                proc.pb = ProgressBar(proc.groups, proc.completed_groups)
-                Thread(target = proc.pb.start_progress).start()
-            while len(proc.completed_groups) < num_groups:
-                time.sleep(3)
-            # if app_run: TODO: Fix process ended by wrong thread error
-            #     proc.pb.root.destroy()
-            return True
-        return False
-    except Exception:
-        trace_back_str = traceback.format_exc()
-        print(trace_back_str)
-        return False
+        # if not app_run:
+        self.get_login_info()
+        try:
+            self.command = sys.argv[-1] if not app_run else command
+            if self.command not in ["create_groups", "delete_groups"]:
+                print("Invalid function command.")
+                sys.exit(1)
+            self.register_sessions(bot_count)
+            if len(self.sessions) > 0:
+                self.run_threads()
+                self.success = True
+        except Exception:
+            trace_back_str = traceback.format_exc()
+            print(trace_back_str)
