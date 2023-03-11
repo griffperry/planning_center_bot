@@ -19,13 +19,12 @@ class UserInterface():
 
     def main_account_screen(self):
         self.main_screen = Tk()
-        self.main_screen.geometry("300x150")
+        self.main_screen.geometry("300x120")
         self.main_screen.title("Small Groups Manager")
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Login", command=self.login).pack()
-        Label(text="").pack()
         self.main_screen.mainloop()
 
     def upload_data(self):
@@ -79,7 +78,7 @@ class UserInterface():
         self.status_label.configure(text=text, fg=color, font=("calibri", 11))
         if self.upload_success:
             self.upload_screen.update()
-            time.sleep(2)
+            time.sleep(1.5)
             self.upload_screen.destroy()
 
     def login(self):
@@ -125,7 +124,7 @@ class UserInterface():
         Thread(target = main.main_func, args = (True, "create_groups")).start()
     
         self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
-        self.pb.start_progress()
+        self.pb.start_progress_bar()
         self.pb.root.destroy()
 
         self.report_success() if main.success else self.report_failure()
@@ -145,7 +144,7 @@ class UserInterface():
         Thread(target = main.main_func, args = (True, "delete_groups")).start()
     
         self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
-        self.pb.start_progress()
+        self.pb.start_progress_bar()
         self.pb.root.destroy()
 
         self.report_success() if main.success else self.report_failure()
@@ -166,7 +165,7 @@ class UserInterface():
     def report_failure(self):
         self.failure_screen = Tk()
         self.failure_screen.title("Failure")
-        self.failure_screen.geometry("100x100")
+        self.failure_screen.geometry("150x100")
         Label(self.failure_screen, text="Login failed").pack()
         ttk.Button(self.failure_screen, text="OK", command=self.delete_failure).pack()
 

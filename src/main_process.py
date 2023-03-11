@@ -9,7 +9,7 @@ from src.data_generator import DataGenerator
 
 class MainProcess():
 
-    def __init__(self, email=None, password=None, demo=None, completed_groups=None):
+    def __init__(self, email=None, password=None, demo=None, completed_groups=[]):
         self.email = email
         self.password = password
         self.demo = demo
@@ -109,7 +109,6 @@ class MainProcess():
         if not app_run:
             self.get_login_info()
             self.groups = self.get_group_data()
-            self.completed_groups = []
         try:
             self.register_sessions()
             if len(self.sessions) > 0:

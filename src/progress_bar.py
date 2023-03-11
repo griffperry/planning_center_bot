@@ -23,18 +23,16 @@ class ProgressBar():
     def check_progress(self):
         self.value_label.update()
         current_completed_groups = 0
-        while len(self.completed_groups) < self.num_groups+1:
+        while current_completed_groups < self.num_groups:
             time.sleep(0.1)
             if len(self.completed_groups) > current_completed_groups:
                 self.progress()
                 current_completed_groups += 1
-                if current_completed_groups == self.num_groups:
-                    break
         self.value_label['text'] = "Complete"
         self.value_label.update()
         time.sleep(3)
 
-    def start_progress(self):
+    def start_progress_bar(self):
         self.root = Toplevel(self.main_root)
         self.root.geometry('300x120')
         self.root.title('Progressbar')
