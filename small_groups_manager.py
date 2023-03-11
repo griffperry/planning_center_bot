@@ -16,21 +16,25 @@ class UserInterface():
     def __init__(self):
         self.completed_groups = []
         self.num_groups = 0
+        self.upload_success = None
 
     def main_account_screen(self):
         self.main_screen = Tk()
-        self.main_screen.geometry("300x120")
+        self.main_screen.geometry("300x125")
         self.main_screen.title("Small Groups Manager")
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Login", command=self.login).pack()
+        self.upload_check = Label(text="")
+        self.upload_check.pack()
         self.main_screen.mainloop()
 
     def upload_data(self):
+        self.upload_check.configure(text="")
         self.upload_screen = Toplevel(self.main_screen)
         self.upload_screen.title("Upload Small Group Data")
-        self.upload_screen.geometry("325x175")
+        self.upload_screen.geometry("325x150")
         Label(self.upload_screen, text="").pack()
 
         self.filename = StringVar()
@@ -82,6 +86,11 @@ class UserInterface():
             self.upload_screen.destroy()
 
     def login(self):
+        if not self.upload_success:
+            message = "Please upload Small Group data first."
+            self.upload_check.configure(text=message, fg="red", font=("calibri", 11))
+            return
+
         self.login_screen = Toplevel(self.main_screen)
         self.login_screen.title("Login to Planning Center")
         self.login_screen.geometry("300x300")
