@@ -244,8 +244,8 @@ class GroupManager(PlanningCenterBot, StatusReport):
         self.click_button_safe(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
 
     def go_to_main_groups_page(self):
-        self.click_button_safe(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/button[1]")
-        self.click_button_safe(By.XPATH, "/html/body/div[1]/div[1]/div/div[2]/div[1]/div/menu/a[2]")
+        self.click_button_safe(By.XPATH, "/html/body/div[1]/div/div/div[1]/div/div[2]/button[1]")
+        self.click_button_safe(By.XPATH, "/html/body/div[1]/div/div/div[1]/div/div[2]/div[1]/div/menu/a[2]")
 
     def return_out_to_main_groups_page(self):
         success = self.attempt_find_element(By.XPATH, "/html/body/div[1]/div/div[2]/a[1]")
