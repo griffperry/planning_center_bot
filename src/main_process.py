@@ -27,7 +27,9 @@ class MainProcess():
         if bot.driver:
             self.sessions.append(bot)
 
-    def register_sessions(self, bot_count):
+    def register_sessions(self):
+        num_groups = len(self.groups)
+        bot_count = num_groups if num_groups < 3 else 3
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=bot_count) as executor:
             executor.map(self.register_session, range(bot_count))
@@ -53,10 +55,10 @@ class MainProcess():
                 group = self.groups.pop(next(iter(self.groups)))
                 try:
                     name = group["name"]
+                    message = "was not deleted"
                     if bot.delete_group(group):
-                        bot.add_group_status(name, f"(User {bot.id}) Group '{name}' deleted.")
-                    else:
-                        bot.add_group_status(name, f"(User {bot.id}) Group '{name}' was not deleted.")
+                        message = "deleted"
+                    bot.add_group_status(name, f"(User {bot.id}) Group '{name}' {message}.")
                     bot.reports.append(bot.create_report(name))
                     self.completed_groups.append(name)
                 except Exception as error:
@@ -67,11 +69,9 @@ class MainProcess():
 
     def run_threads(self):
         bot_count = len(self.sessions)
-
         func_ = self.handle_create_group
         if self.command == "delete_groups":
             func_ = self.handle_delete_group
-
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=bot_count) as executor:
             executor.map(func_, self.sessions)
@@ -85,10 +85,8 @@ class MainProcess():
         return dg.data
 
     def get_login_info(self):
-        # self.email = input("\nEmail: ")
-        # self.password = getpass()
-        self.email = "lgp0008@auburn.edu"
-        self.password = "botTester1"
+        self.email = input("\nEmail: ")
+        self.password = getpass()
         answer = input("Watch bots? [y/n]: ")
         self.demo = True if "y" in answer else False
 
@@ -102,21 +100,18 @@ class MainProcess():
         f.close()
 
     def main_func(self, app_run=False, command=None):
+        self.command = sys.argv[-1] if not app_run else command
+        if self.command not in ["create_groups", "delete_groups"]:
+            print("Invalid function command.")
+            sys.exit(1)
+
         self.success = False
         if not app_run:
+            self.get_login_info()
             self.groups = self.get_group_data()
             self.completed_groups = []
-        num_groups = len(self.groups)
-        bot_count = num_groups if num_groups < 3 else 3
-
-        # if not app_run:
-        self.get_login_info()
         try:
-            self.command = sys.argv[-1] if not app_run else command
-            if self.command not in ["create_groups", "delete_groups"]:
-                print("Invalid function command.")
-                sys.exit(1)
-            self.register_sessions(bot_count)
+            self.register_sessions()
             if len(self.sessions) > 0:
                 self.run_threads()
                 self.success = True

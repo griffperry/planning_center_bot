@@ -5,12 +5,13 @@ class DataGenerator():
     def __init__(self):
         self.valid = False  # default
         self.data = {}
-        self.num_groups = 1
+        self.num_groups = 6
 
     def verify_data(self, data):
         print(f"Verify {data}")
         if True:
             self.valid = True
+
         groups = {
             0: {
                 "name": "test group 1",

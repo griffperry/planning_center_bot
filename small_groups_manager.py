@@ -9,7 +9,6 @@ from tkinter import ttk
 from threading import Thread
 import sys
 import time
-import tkinter as tk
 
 
 class UserInterface():
@@ -18,52 +17,15 @@ class UserInterface():
         self.completed_groups = []
         self.num_groups = 0
 
-    def update_progress_label(self):
-        return f"Current Progress: {self.pb['value']}%"
-
-    def progress(self):
-        if self.pb['value'] < 100:
-            percent_complete = float(1/self.num_groups)*100
-            self.pb['value'] += percent_complete
-            self.value_label['text'] = self.update_progress_label()
-            self.value_label.update()
-
-    def check_progress(self):
-        self.value_label.configure(text=self.update_progress_label())
-        # self.pb.start()
-        current_completed_groups = 0
-        while len(self.completed_groups) < self.num_groups+1:
-            time.sleep(0.5)
-            print(self.completed_groups)
-            if len(self.completed_groups) > current_completed_groups:
-                self.progress()
-                current_completed_groups += 1
-                if current_completed_groups == self.num_groups:
-                    self.pb.stop()
-                    break
-        self.value_label['text'] = "Complete"
-        self.value_label.update()
-        time.sleep(3)
-
     def main_account_screen(self):
         self.main_screen = Tk()
-        self.main_screen.geometry("300x175")
+        self.main_screen.geometry("300x150")
         self.main_screen.title("Small Groups Manager")
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Upload Small Groups", command=self.upload_data).pack()
         Label(text="").pack()
         ttk.Button(self.main_screen, text="Login", command=self.login).pack()
         Label(text="").pack()
-        self.pb = ttk.Progressbar(
-            self.main_screen,
-            orient='horizontal',
-            mode='indeterminate',
-            length=280
-        )
-        self.pb.pack()
-        self.value_label = ttk.Label(self.main_screen, text="")
-        self.value_label.pack()
-        self.pb.start()
         self.main_screen.mainloop()
 
     def upload_data(self):
@@ -103,7 +65,6 @@ class UserInterface():
             dg = DataGenerator()
             if dg.submit_data(filename):
                 self.num_groups = dg.num_groups
-                self.pb.num_groups = self.num_groups
                 self.groups = dg.data
                 self.file_entry.delete(0, END)
                 self.upload_success = True
@@ -118,7 +79,7 @@ class UserInterface():
         self.status_label.configure(text=text, fg=color, font=("calibri", 11))
         if self.upload_success:
             self.upload_screen.update()
-            time.sleep(3)
+            time.sleep(2)
             self.upload_screen.destroy()
 
     def login(self):
@@ -161,15 +122,13 @@ class UserInterface():
 
         main = MainProcess(email, password, demo_flag, self.completed_groups)
         main.groups = self.groups
-        Thread(target = self.check_progress).start()
         Thread(target = main.main_func, args = (True, "create_groups")).start()
-        while len(self.completed_groups) < self.num_groups:
-            time.sleep(3)
+    
+        self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
+        self.pb.start_progress()
+        self.pb.root.destroy()
 
-        if main.success:
-            self.report_success()
-        else:
-            self.report_failure()
+        self.report_success() if main.success else self.report_failure()
 
     def delete_groups(self):
         email = self.username_verify.get()
@@ -183,15 +142,13 @@ class UserInterface():
 
         main = MainProcess(email, password, demo_flag, self.completed_groups)
         main.groups = self.groups
-        Thread(target = self.check_progress).start()
-        # Thread(target = main.main_func, args = (True, "delete_groups")).start()
-        while len(self.completed_groups) < self.num_groups:
-            time.sleep(3)
+        Thread(target = main.main_func, args = (True, "delete_groups")).start()
+    
+        self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
+        self.pb.start_progress()
+        self.pb.root.destroy()
 
-        if main.success:
-            self.report_success()
-        else:
-            self.report_failure()
+        self.report_success() if main.success else self.report_failure()
 
     def report_success(self):
         self.login_success_screen = Tk()
