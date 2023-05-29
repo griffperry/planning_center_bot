@@ -1,17 +1,18 @@
-import pandas
+import pandas as pd
 
 
 class DataGenerator():
     def __init__(self):
         self.valid = False  # default
         self.data = {}
-        self.num_groups = 6
+        self.num_groups = 0
 
     def verify_data(self, data):
         print(f"Verify {data}")
-        if True:
-            self.valid = True
-
+        file_object = pd.read_excel(data)
+        groups = self.translate_data(file_object)
+        print(groups)
+        """
         groups = {
             0: {
                 "name": "test group 1",
@@ -291,10 +292,51 @@ class DataGenerator():
                 },
             },
         }
+        """
         for i in range(self.num_groups):
             self.data[i] = groups[i]
 
-    def submit_data(self, data):
-        # data: string (filepath to excel)
-        self.verify_data(data)
-        return self.valid
+    def translate_data(self, data_object):
+        # import pdb; pdb.set_trace()
+        groups = {}
+        group_names = data_object["Unnamed: 15"].to_list()[1:]
+        self.num_groups = len(group_names)
+        for index in range(self.num_groups):
+            groups[index] = {}
+
+        leader_first_names = data_object["Unnamed: 1"].to_list()[1:]
+        leader_last_names = data_object["Unnamed: 2"].to_list()[1:]
+        leader_emails = data_object["Unnamed: 3"].to_list()[1:]
+        leader_addresses = data_object["Unnamed: 7"].to_list()[1:]
+        group_campuses = data_object["Unnamed: 8"].to_list()[1:]
+        co_leader_names = data_object["Unnamed: 11"].to_list()[1:]
+        co_leader_emails = data_object["Unnamed: 12"].to_list()[1:]
+        group_descriptions = data_object["Unnamed: 16"].to_list()[1:]
+        group_age_ranges = data_object["Unnamed: 17"].to_list()[1:]
+        group_genders = data_object["Unnamed: 18"].to_list()[1:]
+        groups_in_home = data_object["Unnamed: 19"].to_list()[1:]
+        groups_out_home = data_object["Unnamed: 20"].to_list()[1:]
+        group_occurences = data_object["Unnamed: 21"].to_list()[1:]
+        group_days = data_object["Unnamed: 22"].to_list()[1:]
+        group_times = data_object["Unnamed: 23"].to_list()[1:]
+        group_types = data_object["Unnamed: 24"].to_list()[1:]
+        group_childcare = data_object["Unnamed: 25"].to_list()[1:]
+
+        for index, name in enumerate(group_names):
+            groups[index]["name"] = name
+        # for index in range(self.num_groups):
+        #     groups[index]["members"] = name
+        for index in range(self.num_groups):
+            groups[index]["added_members"] = []
+        # for index in range(self.num_groups):
+        #     groups[index]["schedule"] = name
+        for index, description in enumerate(group_descriptions):
+            groups[index]["description"] = description
+        for index, email in enumerate(leader_emails):
+            groups[index]["contact_email"] = email
+        # for index in range(self.num_groups):
+        #     groups[index]["address"] = name
+        # for index in range(self.num_groups):
+        #     groups[index]["tags"] = name
+
+        return groups

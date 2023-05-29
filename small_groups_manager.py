@@ -186,6 +186,9 @@ if __name__ == "__main__":
     if "create_groups" == cmd_line or "delete_groups" == cmd_line:
         main = MainProcess()
         main.main_func()
+    elif "gen_data" == cmd_line:
+        dg = DataGenerator()
+        dg.verify_data("src/test_groups.xlsx")
     else:
         ui = UserInterface()
         ui.main_account_screen()
