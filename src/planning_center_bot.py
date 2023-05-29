@@ -72,6 +72,16 @@ class PlanningCenterBot():
             print(f"(User {self.id}) Could not find button at {xpath}")
             return False
 
+    def click_safe(self, element):
+        retries = 0
+        while retries < 2:
+            try:
+                element.click()
+                return True
+            except:
+                retries += 1
+        return False
+
     def add_text_to_field_safe(self, by_type, xpath, text):
         field = self.attempt_find_element(by_type, xpath)
         if field:
