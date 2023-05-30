@@ -7,7 +7,7 @@ install:
 
 .PHONY: data
 data: install
-	echo "Gen Data"
+	python .\small_groups_manager.py gen_data
 
 .PHONY: groups
 groups: install

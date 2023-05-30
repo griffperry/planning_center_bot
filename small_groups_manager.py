@@ -66,7 +66,7 @@ class UserInterface():
         filename = self.filename if self.browser_used else self.filename.get()
         if filename:
             dg = DataGenerator()
-            if dg.submit_data(filename):
+            if dg.verify_data(filename):
                 self.num_groups = dg.num_groups
                 self.groups = dg.data
                 self.file_entry.delete(0, END)
@@ -128,6 +128,7 @@ class UserInterface():
         demo_flag = True if "y" in demo else False
         self.login_screen.destroy()
 
+        self.completed_groups = []
         main = MainProcess(email, password, demo_flag, self.completed_groups)
         main.groups = self.groups
         Thread(target = main.main_func, args = (True, "create_groups")).start()
@@ -136,6 +137,7 @@ class UserInterface():
         self.pb.start_progress_bar()
         self.pb.root.destroy()
 
+        self.upload_success = False
         self.report_success() if main.success else self.report_failure()
 
     def delete_groups(self):
@@ -148,6 +150,7 @@ class UserInterface():
         demo_flag = True if "y" in demo else False
         self.login_screen.destroy()
 
+        self.completed_groups = []
         main = MainProcess(email, password, demo_flag, self.completed_groups)
         main.groups = self.groups
         Thread(target = main.main_func, args = (True, "delete_groups")).start()
@@ -156,6 +159,7 @@ class UserInterface():
         self.pb.start_progress_bar()
         self.pb.root.destroy()
 
+        self.upload_success = False
         self.report_success() if main.success else self.report_failure()
 
     def report_success(self):
@@ -186,6 +190,9 @@ if __name__ == "__main__":
     if "create_groups" == cmd_line or "delete_groups" == cmd_line:
         main = MainProcess()
         main.main_func()
+    elif "gen_data" == cmd_line:
+        dg = DataGenerator()
+        dg.verify_data("src/test_groups.xlsx")
     else:
         ui = UserInterface()
         ui.main_account_screen()

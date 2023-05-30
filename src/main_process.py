@@ -86,7 +86,7 @@ class MainProcess():
 
     def get_group_data(self):
         dg = DataGenerator()
-        dg.verify_data("test_groups.xlsx") # This will verify and return data from excel spreadsheet
+        dg.verify_data("src/test_groups.xlsx")
         return dg.data
 
     def get_login_info(self):
