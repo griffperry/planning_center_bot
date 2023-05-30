@@ -11,6 +11,7 @@ class DataGenerator():
         file_object = pd.read_excel(data_file)
         file_object = file_object.fillna('')
         self.data = self.translate_data(file_object)
+        return True
 
     def translate_data(self, data_object):
         groups = {}
