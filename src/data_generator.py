@@ -6,11 +6,12 @@ class DataGenerator():
     def __init__(self):
         self.data = {}
         self.num_groups = 0
+        self.num_test_groups = 6
 
     def verify_data(self, data_file):
         file_object = pd.read_excel(data_file)
         file_object = file_object.fillna('')
-        self.data = self.translate_data(file_object)
+        self.translate_data(file_object)
         return True
 
     def translate_data(self, data_object):
@@ -38,7 +39,8 @@ class DataGenerator():
             self._gen_address_data(index, groups, data_object)
         for index in range(self.num_groups):
             self._gen_tags_data(index, groups, data_object)
-        return groups
+        for i in range(self.num_test_groups):
+            self.data[i] = groups[i]
 
     def _gen_data_list(self, data_object, column):
         return data_object[column].to_list()[1:]

@@ -108,12 +108,6 @@ class UserInterface():
         self.password_login_entry.pack()
         Label(self.login_screen, text="").pack()
 
-        Label(self.login_screen, text="Would you like to demo? [yes/no].").pack()
-        self.demo_verify = StringVar()
-        self.demo_entry = Entry(self.login_screen, textvariable=self.demo_verify)
-        self.demo_entry.pack()
-        Label(self.login_screen, text="").pack()
-
         ttk.Button(self.login_screen, text="Create Groups", command=self.create_groups).pack()
         Label(self.login_screen, text="").pack()
         ttk.Button(self.login_screen, text="Delete Groups", command=self.delete_groups).pack()
@@ -123,13 +117,10 @@ class UserInterface():
         self.username_login_entry.delete(0, END)
         password = self.password_verify.get()
         self.password_login_entry.delete(0, END)
-        demo = self.demo_verify.get().lower()
-        self.demo_entry.delete(0, END)
-        demo_flag = True if "y" in demo else False
         self.login_screen.destroy()
 
         self.completed_groups = []
-        main = MainProcess(email, password, demo_flag, self.completed_groups)
+        main = MainProcess(email, password, self.completed_groups)
         main.groups = self.groups
         Thread(target = main.main_func, args = (True, "create_groups")).start()
     
@@ -145,13 +136,10 @@ class UserInterface():
         self.username_login_entry.delete(0, END)
         password = self.password_verify.get()
         self.password_login_entry.delete(0, END)
-        demo = self.demo_verify.get().lower()
-        self.demo_entry.delete(0, END)
-        demo_flag = True if "y" in demo else False
         self.login_screen.destroy()
 
         self.completed_groups = []
-        main = MainProcess(email, password, demo_flag, self.completed_groups)
+        main = MainProcess(email, password, self.completed_groups)
         main.groups = self.groups
         Thread(target = main.main_func, args = (True, "delete_groups")).start()
     
