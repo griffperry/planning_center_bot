@@ -38,6 +38,7 @@ class GroupManager(PlanningCenterBot, StatusReport):
                 print(f"(User {self.id}) Selected wrong group.")
         else:
             print(f"(User {self.id}) Search for group '{name}' failed.")
+            self.return_out_to_main_groups_page()
         return group_deleted
 
     def select_archive_and_delete(self):
