@@ -123,12 +123,20 @@ class DataGenerator():
         all_group_types = self._gen_data_list(data_object, "Unnamed: 24")
         group_types = all_group_types[index]
         if "," in group_types:
-            return group_types.replace(" ", "").split(",")
+            group_types_list = group_types.split(",")
+            group_types = []
+            for group_type in group_types_list:
+                group_types.append(group_type.strip())
+            return group_types
         return [group_types]
 
     def _get_age_range(self, index, data_object):
         all_age_ranges = self._gen_data_list(data_object, "Unnamed: 17")
-        age_range = all_age_ranges[index]
-        if "," in age_range:
-            return age_range.replace(" ", "").split(",")
-        return [age_range]
+        age_ranges = all_age_ranges[index]
+        if "," in age_ranges:
+            age_range_list = age_ranges.split(",")
+            age_ranges = []
+            for age_range in age_range_list:
+                age_ranges.append(age_range.strip())
+            return age_ranges
+        return [age_ranges]

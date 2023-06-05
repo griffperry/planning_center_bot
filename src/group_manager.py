@@ -45,7 +45,7 @@ class GroupManager(StatusReport):
             if success:
                 for member in group["members"].values():
                     self.add_member_to_group(member)
-                # self.add_group_settings(group)
+                self.add_group_settings(group)
                 self.add_group_status(group_name, f"(User {self.id}) Group '{group_name}' created.")
             self.reports.append(self.create_report(group_name))
             self.attempts = 0
@@ -78,31 +78,24 @@ class GroupManager(StatusReport):
                 self.current_group.add_member(person_id=person_obj[0].id, leader=promote_member)
 
     def add_group_settings(self, group):
-        self.go_to_settings_page()
-        self.add_meeting_schedule(group.get("schedule"))
-        self.add_description(group.get("description"))
-        self.add_group_contact_email(group.get("contact_email"))
-        self.add_group_location(group.get("name"), group.get("address"))
-        self.add_group_tags(group.get("tags"))
+        with self.current_group.no_refresh():
+            self.add_meeting_schedule(group.get("schedule"))
+            self.add_description(group.get("description"))
+            self.add_group_contact_email(group.get("contact_email"))
+            self.add_group_tags(group.get("tags"))
+            # self.add_group_location(group.get("name"), group.get("address"))
 
     def add_meeting_schedule(self, schedule):
         if schedule:
-            self.add_text_to_field(By.ID, "group_schedule", schedule)
-            self.hit_enter_on_element_safe(By.ID, "group_schedule")
+            self.current_group.schedule = schedule
 
     def add_description(self, description):
         if description:
-            self.add_text_to_field(By.XPATH,
-                               "/html/body/main/div/div/div[2]/section[2]/div[1]/div[1]/div[1]/div/form/div/div/div/div/div[1]/trix-editor",
-                               description,
-                            )
-            self.click_button(By.XPATH, "/html/body/main/div/div/div[2]/section[2]/div[1]/div[1]/div[1]/div/form/div/div/div/div/div[2]/div/a/span[1]")
+            self.current_group.description = description
 
     def add_group_contact_email(self, email):
         if email:
-            self.add_text_to_field(By.ID, "group_contact_email", email)
-            self.hit_enter_on_element(By.ID, "group_contact_email")
-            time.sleep(self.wait)
+            self.current_group.contact_email = email
 
     def add_group_location(self, group_name, address):
         if group_name and address:
@@ -137,18 +130,9 @@ class GroupManager(StatusReport):
 
     def add_group_tags(self, tags):
         if tags:
-            self.click_button(By.XPATH, "//span[contains(text(), 'Add tags')]")
-            self.find_and_select_tags(tags)
-            self.click_button(By.XPATH, "//span[contains(text(), 'Add tags')]")
-
-    def find_and_select_tags(self, tags):
-        elements = self.attempt_find_elements(By.XPATH, "//li[contains(@class, 'mb-1')]")
-        readable_elements = [ element.text for element in elements ]
-        for tag in self.gen_simple_tag_list(tags):
-            if tag in readable_elements:
-                element_index = readable_elements.index(tag)
-                self.click_safe(elements[element_index])
-                time.sleep(self.wait)
+            tag_list = self.gen_simple_tag_list(tags)
+            for tag in tag_list:
+                self.current_group.add_tag(tag)
 
     def gen_simple_tag_list(self, tags):
         tag_list = []
@@ -159,6 +143,3 @@ class GroupManager(StatusReport):
                 for i in tag:
                     tag_list.append(i)
         return tag_list
-
-    def go_to_settings_page(self):
-        self.click_button_safe(By.XPATH, "/html/body/main/div/aside/nav/ul/li[5]")
