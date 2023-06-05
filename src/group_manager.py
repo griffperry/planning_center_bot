@@ -2,6 +2,7 @@ import time
 import traceback
 from planning_center_backend import planning_center
 from planning_center_backend.people import PeopleQueryExpression
+from planning_center_backend import maps
 from src.status_report import StatusReport
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -85,7 +86,7 @@ class GroupManager(StatusReport):
             self.add_description(group.get("description"))
             self.add_group_contact_email(group.get("contact_email"))
             self.add_group_tags(group.get("tags"))
-            # self.add_group_location(group.get("name"), group.get("address"))
+            self.add_group_location(group.get("name"), group.get("address"))
 
     def add_meeting_schedule(self, schedule):
         if schedule:
@@ -101,34 +102,15 @@ class GroupManager(StatusReport):
 
     def add_group_location(self, group_name, address):
         if group_name and address:
-            self.click_button(By.XPATH, "//option[contains(text(), 'Create a new location...')]")
-            self.add_location_contents(group_name, address)
-
-    def add_location_contents(self, group_name, address):
-        try:
-            address_container = self.attempt_find_element(By.XPATH, "//div[contains(@class, 'address-container')]")
-            text_box = address_container.find_element(By.XPATH, ".//input[contains(@type, 'text')]")
-            text_box.send_keys(f"{group_name} location")
-            text_box.send_keys(Keys.ENTER)
-            time.sleep(self.wait)
-            text_box = address_container.find_element(By.XPATH, ".//input[contains(@placeholder, 'Street address')]")
-            text_box.send_keys(address)
-            text_box.send_keys(Keys.ENTER)
-            time.sleep(self.wait)
-            self.click_button(By.XPATH, "//option[contains(@value, 'hidden')]")
-            save_location_buttons = self.attempt_find_elements(By.XPATH, "//span[contains(text(), 'Save location')]")
-            if len(save_location_buttons) > 1:
-                save_location_buttons[1].click()
-            time.sleep(self.wait)
-            self.location_attempts = 0
-        except Exception:
-            self.driver.refresh()
-            self.location_attempts += 1
-            if self.location_attempts < self.max_attempts:
-                print(f"(User {self.id}) Retry adding location  '{group_name}'")
-                self.add_group_location(group_name, address)
-            else:
-                self.add_group_caveat(group_name, f"(User {self.id}) Failed to add location in group '{group_name}'")
+            maps_api = maps.Maps("AIzaSyBdWuZ5TqhWsmi76kyNkXcU8MR61zRZS3U")
+            try:
+                location = maps_api.find_place_from_text(address)
+                if len(location) == 1:
+                    self.current_group.location_id = location[0].place_id
+                else:
+                    self.add_group_caveat(group_name, f"(User {self.id}) Failed to add location in group '{group_name}'")
+            except:
+                self.add_group_caveat(group_name, f"(User {self.id}) No access to add location.")
 
     def add_group_tags(self, tags):
         if tags:
