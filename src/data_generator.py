@@ -31,7 +31,7 @@ class DataGenerator():
         self.data = {}
         self.num_groups = 0
         self.app_run = app_run
-        self.num_test_groups = 1
+        self.num_test_groups = 6
 
     def verify_data(self, data_file):
         file_object = pd.read_excel(data_file)

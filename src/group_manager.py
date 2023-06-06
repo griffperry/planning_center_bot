@@ -112,8 +112,13 @@ class GroupManager(StatusReport):
             except:
                 self.add_group_caveat(
                     group_name,
-                    f"(User {self.id}) Failed to add location in group '{group_name}'"
+                    f"(User {self.id}) Failed to add location in group '{group_name}'."
                 )
+        else:
+            self.add_group_caveat(
+                group_name,
+                f"(User {self.id}) No location added for group '{group_name}'."
+            )
 
     def add_group_tags(self, tags):
         if tags:
