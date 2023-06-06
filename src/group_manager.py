@@ -1,21 +1,13 @@
-import time
-import traceback
 from planning_center_backend import planning_center
 from planning_center_backend.people import PeopleQueryExpression
 from planning_center_backend import maps
 from src.status_report import StatusReport
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 
 class GroupManager(StatusReport):
 
     def __init__(self, email, password, id):
-        self.start_wait = 0.5
-        self.wait = self.start_wait
         self.id = id
-        self.attempts = 0
-        self.location_attempts = 0
-        self.max_attempts = 3
+        self.maps_api_key = None
         self.reports = []
         self.group_status = {}
         self.group_caveats = {}
@@ -25,43 +17,43 @@ class GroupManager(StatusReport):
 
     def delete_group(self, group):
         group_deleted = False
-        name = group["name"]
-        groups = self.backend.groups.query(name)
+        group_name = group["name"]
+        self.group_status[group_name] = None
+        self.group_caveats[group_name] = []
+        groups = self.backend.groups.query(group_name)
         if groups:
             groups[0].delete()
-        if not self.backend.groups._check_exists(name):
-            group["added members"] = []
             group_deleted = True
+            self.add_group_status(group_name, f"(User {self.id}) Group '{group_name}' deleted.")
         else:
-            print(f"(User {self.id}) Search for group '{name}' failed.")
+            self.add_group_status(group_name, f"(User {self.id}) Group '{group_name}' doesn't exist.")
+        self.reports.append(self.create_report(group_name))
         return group_deleted
 
     def create_group(self, group):
         group_name = group["name"]
-        print(f"(User {self.id}) Start group {group_name}")
         self.group_status[group_name] = None
         self.group_caveats[group_name] = []
-        try:
-            success = self.add_group(group)
-            if success:
-                for member in group["members"].values():
-                    self.add_member_to_group(group_name, member)
-                self.add_group_settings(group)
-                self.add_group_status(group_name, f"(User {self.id}) Group '{group_name}' created.")
-            self.reports.append(self.create_report(group_name))
-            self.attempts = 0
-            self.wait = self.start_wait
-            group["added members"] = []
-        except Exception:
-            trace_back_str = traceback.format_exc()
-            print(trace_back_str)
+        success = self.add_group(group)
+        if success:
+            for member in group["members"].values():
+                self.add_member_to_group(group_name, member)
+            self.add_group_settings(group)
+            self.add_group_status(
+                group_name,
+                f"(User {self.id}) Group '{group_name}' created."
+            )
+        self.reports.append(self.create_report(group_name))
 
     def add_group(self, group):
         group_name = group["name"]
         if not self.backend.groups._check_exists(group_name):
             self.current_group = self.backend.groups.create(group_name)
         else:
-            self.add_group_status(group_name, f"(User {self.id}) Group '{group_name}' already exists.")
+            self.add_group_status(
+                group_name,
+                f"(User {self.id}) Group '{group_name}' already exists."
+            )
             self.current_group = self.backend.groups.query(group_name)[0]
         if self.backend.groups._check_exists(group_name):
             return True
@@ -78,7 +70,10 @@ class GroupManager(StatusReport):
             if len(person_obj) == 1:
                 self.current_group.add_member(person_id=person_obj[0].id, leader=promote_member)
             else:
-                self.add_group_caveat(group_name, f"(User {self.id}) {member_name} not found when added to '{group_name}'.")
+                self.add_group_caveat(
+                    group_name,
+                    f"(User {self.id}) {member_name} not found when added to '{group_name}'."
+                )
 
     def add_group_settings(self, group):
         with self.current_group.no_refresh():
@@ -102,15 +97,23 @@ class GroupManager(StatusReport):
 
     def add_group_location(self, group_name, address):
         if group_name and address:
-            maps_api = maps.Maps("AIzaSyBdWuZ5TqhWsmi76kyNkXcU8MR61zRZS3U")
+            maps_api = maps.Maps(self.maps_api_key)
             try:
                 location = maps_api.find_place_from_text(address)
-                if len(location) == 1:
-                    self.current_group.location_id = location[0].place_id
-                else:
-                    self.add_group_caveat(group_name, f"(User {self.id}) Failed to add location in group '{group_name}'")
+                assert len(location) == 1
+                geocodes = maps_api.geocode_from_place_id(location[0].place_id)
+                assert len(geocodes) == 1
+                group_location = self.current_group.locations.create(
+                    f"{group_name} location",
+                    geocodes[0],
+                    shared=False
+                )
+                self.current_group.location_id = group_location
             except:
-                self.add_group_caveat(group_name, f"(User {self.id}) No access to add location.")
+                self.add_group_caveat(
+                    group_name,
+                    f"(User {self.id}) Failed to add location in group '{group_name}'"
+                )
 
     def add_group_tags(self, tags):
         if tags:

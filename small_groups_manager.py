@@ -65,7 +65,7 @@ class UserInterface():
     def verify(self):
         filename = self.filename if self.browser_used else self.filename.get()
         if filename:
-            dg = DataGenerator()
+            dg = DataGenerator(app_run=True)
             if dg.verify_data(filename):
                 self.num_groups = dg.num_groups
                 self.groups = dg.data
@@ -108,6 +108,12 @@ class UserInterface():
         self.password_login_entry.pack()
         Label(self.login_screen, text="").pack()
 
+        Label(self.login_screen, text="Google Maps Key (needed for create)").pack()
+        self.maps_api_key = StringVar()
+        self.maps_api_key_entry = Entry(self.login_screen, textvariable=self.maps_api_key)
+        self.maps_api_key_entry.pack()
+        Label(self.login_screen, text="").pack()
+
         ttk.Button(self.login_screen, text="Create Groups", command=self.create_groups).pack()
         Label(self.login_screen, text="").pack()
         ttk.Button(self.login_screen, text="Delete Groups", command=self.delete_groups).pack()
@@ -117,38 +123,47 @@ class UserInterface():
         self.username_login_entry.delete(0, END)
         password = self.password_verify.get()
         self.password_login_entry.delete(0, END)
+        maps_api_key = self.maps_api_key.get()
+        self.maps_api_key_entry.delete(0, END)
         self.login_screen.destroy()
 
         self.completed_groups = []
-        main = MainProcess(email, password, self.completed_groups)
+        main = MainProcess(email, password, maps_api_key, self.completed_groups)
         main.groups = self.groups
-        Thread(target = main.main_func, args = (True, "create_groups")).start()
-    
-        self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
-        self.pb.start_progress_bar()
-        self.pb.root.destroy()
-
-        self.upload_success = False
-        self.report_success() if main.success else self.report_failure()
+        main.register_sessions()
+        if main.login_success:
+            Thread(target = main.main_func, args = (True, "create_groups")).start()
+            self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
+            self.pb.start_progress_bar()
+            self.pb.root.destroy()
+            self.upload_success = False
+            if main.success:
+                self.report_success()
+        else:
+            self.report_failure()
 
     def delete_groups(self):
         email = self.username_verify.get()
         self.username_login_entry.delete(0, END)
         password = self.password_verify.get()
         self.password_login_entry.delete(0, END)
+        maps_api_key = None
         self.login_screen.destroy()
 
         self.completed_groups = []
-        main = MainProcess(email, password, self.completed_groups)
+        main = MainProcess(email, password, maps_api_key, self.completed_groups)
         main.groups = self.groups
-        Thread(target = main.main_func, args = (True, "delete_groups")).start()
-    
-        self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
-        self.pb.start_progress_bar()
-        self.pb.root.destroy()
-
-        self.upload_success = False
-        self.report_success() if main.success else self.report_failure()
+        main.register_sessions()
+        if main.login_success:
+            Thread(target = main.main_func, args = (True, "delete_groups")).start()
+            self.pb = ProgressBar(self.main_screen, self.completed_groups, self.num_groups)
+            self.pb.start_progress_bar()
+            self.pb.root.destroy()
+            self.upload_success = False
+            if main.success:
+                self.report_success()
+        else:
+            self.report_failure()
 
     def report_success(self):
         self.login_success_screen = Tk()
