@@ -1,8 +1,8 @@
 # planning_center_bot
 
-This tool uses a selenium web driver to create small groups in planning center.
+This tool uses a custom planning center api to create small groups in planning center.
 
-The data is originally formatted in an excel spreadsheet. Examples to come
+The data is originally formatted in an excel spreadsheet and translated into a dictionary
 
 Install required packages
 `make install`
