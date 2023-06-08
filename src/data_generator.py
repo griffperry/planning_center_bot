@@ -49,7 +49,7 @@ class DataGenerator():
         for index in range(self.num_groups):
             groups[index] = {}
         for index, name in enumerate(group_names):
-            groups[index]["name"] = name
+            groups[index]["name"] = name.strip().upper()
         for index in range(self.num_groups):
             self._gen_members_data(index, groups, data_object)
         for index in range(self.num_groups):
@@ -79,14 +79,14 @@ class DataGenerator():
         co_leader_emails = self._gen_data_list(data_object, Fields.CO_LEADER_EMAILS.value)
         groups[index]["members"] = {
             0: {
-                "name": f"{leader_first_names[index]} {leader_last_names[index]}",
+                "name": f"{leader_first_names[index].strip()} {leader_last_names[index].strip()}",
                 "status": "leader",
-                "email": f"{leader_emails[index]}" if leader_emails[index] else None,
+                "email": f"{leader_emails[index].strip()}" if leader_emails[index] else None,
             },
             1: {
-                "name": f"{co_leader_names[index]}",
+                "name": f"{co_leader_names[index].strip()}",
                 "status": "co-leader",
-                "email": f"{co_leader_emails[index]}" if co_leader_emails[index] else None,
+                "email": f"{co_leader_emails[index].strip()}" if co_leader_emails[index] else None,
             }
         }
 
@@ -141,7 +141,7 @@ class DataGenerator():
         group_childcare = self._gen_data_list(data_object, Fields.GROUP_CHILDCARE.value)
         if groups_meet_type[index] == "Online":
             attributes.append("Online group")
-        if group_childcare[index]:
+        if group_childcare[index].lower() == "yes":
             attributes.append("Childcare Available")
         return attributes
 
