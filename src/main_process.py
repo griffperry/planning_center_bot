@@ -68,11 +68,26 @@ class MainProcess():
                 print(trace_back_str)
                 sys.exit(1)
 
+    def handle_add_members(self, bot):
+        while len(self.groups) > 0:
+            group = self.groups.pop(next(iter(self.groups)))
+            try:
+                group_name = group["name"]
+                print(f"(User {bot.id}) Start add members for group {group_name}")
+                bot.add_members(group)
+                self.completed_groups.append(group_name)
+            except:
+                trace_back_str = traceback.format_exc()
+                print(trace_back_str)
+                sys.exit(1)
+
     def run_threads(self):
         bot_count = len(self.sessions)
         func_ = self.handle_create_group
         if self.command == "delete_groups":
             func_ = self.handle_delete_group
+        elif self.command == "add_members":
+            func_ = self.handle_add_members
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=bot_count) as executor:
             executor.map(func_, self.sessions)
@@ -104,7 +119,7 @@ class MainProcess():
 
     def main_func(self, app_run=False, command=None):
         self.command = sys.argv[-1] if not app_run else command
-        if self.command not in ["create_groups", "delete_groups"]:
+        if self.command not in ["create_groups", "delete_groups", "add_members"]:
             print("Invalid function command.")
             sys.exit(1)
 

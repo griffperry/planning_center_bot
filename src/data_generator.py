@@ -23,6 +23,7 @@ class Fields(Enum):
     GROUP_TIMES = "Unnamed: 23"
     GROUP_TYPES = "Unnamed: 24"
     GROUP_CHILDCARE = "Unnamed: 25"
+    GROUP_MEMBERS = "Unnamed: 27"
 
 
 class DataGenerator():
@@ -51,7 +52,7 @@ class DataGenerator():
         for index, name in enumerate(group_names):
             groups[index]["name"] = name.strip().upper()
         for index in range(self.num_groups):
-            self._gen_members_data(index, groups, data_object)
+            self._gen_leaders_data(index, groups, data_object)
         for index in range(self.num_groups):
             groups[index]["added members"] = []
         for index in range(self.num_groups):
@@ -64,6 +65,9 @@ class DataGenerator():
             self._gen_address_data(index, groups, data_object)
         for index in range(self.num_groups):
             self._gen_tags_data(index, groups, data_object)
+        for index in range(self.num_groups):
+            self._gen_attendees_data(index, groups, data_object)
+
         self.num_groups = self.num_groups if self.app_run else self.num_test_groups
         for i in range(self.num_groups):
             self.data[i] = groups[i]
@@ -71,7 +75,7 @@ class DataGenerator():
     def _gen_data_list(self, data_object, column):
         return data_object[column].to_list()[1:]
 
-    def _gen_members_data(self, index, groups, data_object):
+    def _gen_leaders_data(self, index, groups, data_object):
         leader_first_names = self._gen_data_list(data_object, Fields.LEADER_FIRST_NAMES.value)
         leader_last_names = self._gen_data_list(data_object, Fields.LEADER_LAST_NAMES.value)
         leader_emails = self._gen_data_list(data_object, Fields.LEADER_EMAILS.value)
@@ -89,6 +93,9 @@ class DataGenerator():
                 "email": f"{co_leader_emails[index].strip()}" if co_leader_emails[index] else None,
             }
         }
+
+    def _gen_attendees_data(self, index, groups, data_object):
+        groups[index]["attendees"] = self._get_attendees(index, data_object)
 
     def _gen_schedule_data(self, idx, groups, data_object):
         group_occurences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
@@ -155,6 +162,17 @@ class DataGenerator():
                 group_types.append(group_type.strip())
             return group_types
         return [group_types]
+
+    def _get_attendees(self, index, data_object):
+        all_attendees = self._gen_data_list(data_object, Fields.GROUP_MEMBERS.value)
+        attendees = all_attendees[index]
+        if "," in attendees:
+            attendees_list = attendees.split(",")
+            attendees = []
+            for attendee in attendees_list:
+                attendees.append(attendee.strip())
+            return attendees
+        return [attendees]
 
     def _get_age_range(self, index, data_object):
         all_age_ranges = self._gen_data_list(data_object, Fields.GROUP_AGE_RANGES.value)

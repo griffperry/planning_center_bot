@@ -190,7 +190,7 @@ class UserInterface():
 
 if __name__ == "__main__":
     cmd_line = sys.argv[-1]
-    if "create_groups" == cmd_line or "delete_groups" == cmd_line:
+    if "create_groups" == cmd_line or "delete_groups" == cmd_line or "add_members" == cmd_line:
         main = MainProcess()
         main.main_func()
     elif "gen_data" == cmd_line:

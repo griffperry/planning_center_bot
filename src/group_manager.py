@@ -56,6 +56,24 @@ class GroupManager(StatusReport):
             )
         self.reports.append(self.create_report(group_name))
 
+    def add_members(self, group):
+        group_name = group["name"]
+        if self.backend.groups._check_exists(group_name):
+            groups = self.backend.groups.query(group_name)
+            assert len(groups) == 1
+            self.current_group = groups[0]
+            self.add_group_status(
+                group_name,
+                f"(User {self.id}) Group '{group_name}' found."
+            )
+            for member in group.get("attendees"):
+                member_obj = {}
+                member_obj["name"] = member
+                member_obj["status"] = "member"
+                member_obj["email"] = None
+                self.add_member_to_group(group_name, member_obj)
+            self.reports.append(self.create_report(group_name))
+
     def add_group(self, group):
         group_name = group["name"]
         if not self.backend.groups._check_exists(group_name):
@@ -69,17 +87,23 @@ class GroupManager(StatusReport):
         member_status = member.get("status")
         member_email = member.get("email")
         promote_member = "leader" in member_status
-        if member_name:
+        if member_name and member_email:
             qe = PeopleQueryExpression(search_name=member_name, search_name_or_email=member_email)
-            if qe:
-                person_obj = self.backend.people.query(qe)
-                if len(person_obj) == 1:
-                    self.current_group.add_member(person_id=person_obj[0].id, leader=promote_member)
-                else:
-                    self.add_group_caveat(
-                        group_name,
-                        f"(User {self.id}) {member_name} not found when added to '{group_name}'."
-                    )
+        elif member_name:
+            qe = PeopleQueryExpression(search_name=member_name)
+        if qe:
+            person_obj = self.backend.people.query(qe)
+            if len(person_obj) == 1:
+                self.current_group.add_member(person_id=person_obj[0].id, leader=promote_member)
+                self.add_group_caveat(
+                    group_name,
+                    f"(User {self.id}) {member_name} added to '{group_name}'."
+                )
+            else:
+                self.add_group_caveat(
+                    group_name,
+                    f"(User {self.id}) {member_name} not found when added to '{group_name}'."
+                )
 
     def add_group_settings(self, group):
         with self.current_group.no_refresh():
