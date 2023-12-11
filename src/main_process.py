@@ -83,7 +83,7 @@ class MainProcess():
     def get_group_data(self):
         """ Function used for local testing """
         dg = DataGenerator()
-        dg.verify_data("src/test_groups.xlsx")
+        dg.verify_data("test/test_groups2.xlsx")
         return dg.data
 
     def get_login_info(self):

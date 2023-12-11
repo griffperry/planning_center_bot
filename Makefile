@@ -17,6 +17,10 @@ groups: install
 clean: install
 	python .\small_groups_manager.py delete_groups
 
+.PHONY: test
+test:
+	pytest -v test/
+
 .PHONY: executable
 executable:
 	pyinstaller --onefile --icon=daystar_logo.ico --windowed --clean .\small_groups_manager.py
