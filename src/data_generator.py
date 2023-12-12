@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 from datetime import datetime
 from enum import Enum
 
@@ -124,22 +125,81 @@ class DataGenerator():
                 }
 
     def _gen_schedule_data(self, idx, groups, data_object):
-        group_occurences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
+        group_occurrences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
         group_days = self._gen_data_list(data_object, Fields.GROUP_DAYS.value)
         group_times = self._gen_data_list(data_object, Fields.GROUP_TIMES.value)
-        # TODO: self._format_group_times(group_times)
-        groups[idx]["schedule"] = f"{group_days[idx]} @ {group_times[idx]} {group_occurences[idx]}"
+        self._format_group_days(group_days)
+        self._format_group_times(group_times)
+        groups[idx]["schedule"] = f"{group_days[idx]} @ {group_times[idx]} {group_occurrences[idx]}"
+
+    def _format_group_days(self, group_days):
+        for idx, set_days in enumerate(group_days):
+            day_string = ""
+            days_of_the_week = ["Monday", "Tuesday", "Wednesday", "Thursday",
+                                "Friday", "Saturday", "Sunday"]
+            for day in days_of_the_week:
+                if day in set_days:
+                    day_string += f"{day}, "
+
+            group_days[idx] = day_string.rstrip(", ") if "," in day_string else day_string
+
+    def _format_group_times(self, group_times):
+        for idx, time in enumerate(group_times):
+            hour = None
+            time_period = "AM" if "a" in time.lower() else "PM"
+            result = re.search(r'\d{2}', time)
+            all_digits = re.findall(r'\d', time)
+            if result:
+                if "1" == result.group(0)[0]:
+                    hour = result.group(0)
+                elif "0" == result.group(0)[0] and result.group(0)[0] == all_digits[0]:
+                    hour = result.group(0)[1]
+                elif result.group(0)[0] == all_digits[0]:
+                    hour = all_digits[0]
+            if all_digits:
+                minute = "00"
+                if hour is None:
+                    hour = all_digits[0]
+                if len(all_digits) != 1:
+                    hour_past = False
+                    for val in all_digits:
+                        if val in ["0", "3"]:
+                            if val != hour and val != "0":
+                                minute = f"{val}0"
+                                break
+                            elif val == hour and not hour_past:
+                                hour_past = True
+                                continue
+                            elif hour_past:
+                                minute = f"{val}0"
+                                break
+                group_times[idx] = f"{hour}:{minute} {time_period}"
+            else:
+                group_times[idx] = "TBD"
 
     def _gen_address_data(self, index, groups, data_object):
         groups_meet_type = self._gen_data_list(data_object, Fields.GROUP_MEET_TYPES.value)
         groups_out_home_address = self._gen_data_list(data_object, Fields.GROUP_OUT_HOME_ADDRESSES.value)
         leader_addresses = self._gen_data_list(data_object, Fields.LEADER_ADDRESSES.value)
-        if groups_meet_type[index] == "In Home":
-            groups[index]["address"] = leader_addresses[index].strip("Home:/\n")
+        if "In Home" in groups_meet_type[index]:
+            if groups_out_home_address[index]:
+                groups[index]["address"] = groups_out_home_address[index]
+            else:
+                groups[index]["address"] = leader_addresses[index].strip("Home:/\n")
         elif groups_meet_type[index] != "Online":
             groups[index]["address"] = groups_out_home_address[index]
         else:
-            groups[index]["address"] = None
+            groups[index]["address"] = ''
+        self._format_group_address(index, groups)
+
+    def _format_group_address(self, index, groups):
+        if groups[index]["address"] != '':
+            address = groups[index]["address"]
+            address_number = re.search("\d+", address.split(" ")[0])
+            if address_number is None:
+                groups[index]["address"] = ''
+            else:
+                groups[index]["address"] = address.replace("\n", " ")
 
     def _gen_tags_data(self, index, groups, data_object):
         group_campuses = self._gen_data_list(data_object, Fields.GROUP_CAMPUSES.value)

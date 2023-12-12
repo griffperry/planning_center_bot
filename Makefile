@@ -19,7 +19,7 @@ clean: install
 
 .PHONY: test
 test:
-	pytest -v test/
+	pytest -v test/ $(PYTEST_ARGS)
 
 .PHONY: executable
 executable:
