@@ -3,3 +3,4 @@ pyinstaller
 pandas
 xlrd
 openpyxl
+pytest
