@@ -40,15 +40,15 @@ class DataGenerator():
         self.translate_data(data_object)
         return True
 
-    def filter_on_campus(self, file_object):
-        file_object = file_object.loc[file_object[Fields.GROUP_CAMPUSES.value] == self.campus]
-        return file_object
-
     def get_excel_sheet_object(self, data_file):
         file_object = pd.read_excel(data_file)
         file_object = file_object.fillna('')
         campus_data = self.filter_on_campus(file_object)
         return campus_data
+
+    def filter_on_campus(self, file_object):
+        file_object = file_object.loc[file_object[Fields.GROUP_CAMPUSES.value] == self.campus]
+        return file_object
 
     def translate_data(self, data_object):
         groups = {}
@@ -86,42 +86,42 @@ class DataGenerator():
         leader_first_names = self._gen_data_list(data_object, Fields.LEADER_FIRST_NAMES.value)
         leader_last_names = self._gen_data_list(data_object, Fields.LEADER_LAST_NAMES.value)
         leader_emails = self._gen_data_list(data_object, Fields.LEADER_EMAILS.value)
+        co_leader_names = []
+        co_leader_emails = []
         groups[index]["members"] = {
             0: {
                 "name": f"{leader_first_names[index].strip()} {leader_last_names[index].strip()}",
                 "status": "leader",
-                "email": f"{leader_emails[index].strip()}" if leader_emails[index] else None,
+                "email": leader_emails[index].strip() if leader_emails[index] else None,
             },
         }
 
-        co_leader_names = []
-        for co_index, co_leader in enumerate(self._gen_data_list(data_object, Fields.CO_LEADER_NAMES.value)):
-            co_leader_names.append(co_leader)
-            if " and " in co_leader:
-                co_leader_names[co_index] = co_leader.split("and")
-            if " // " in co_leader:
-                co_leader_names[co_index] = co_leader.split("//")
+        def format_co_leader_info(info):
+            if "and" in info:
+                return info.split("and")
+            if "//" in info:
+                return info.split("//")
+            return info
 
-        co_leader_emails = []
-        for co_index, co_leader in enumerate(self._gen_data_list(data_object, Fields.CO_LEADER_EMAILS.value)):
-            co_leader_emails.append(co_leader)
-            if " and " in co_leader:
-                co_leader_emails[co_index] = co_leader.split("and")
-            if " // " in co_leader:
-                co_leader_emails[co_index] = co_leader.split("//")
+        for co_leader_name in self._gen_data_list(data_object, Fields.CO_LEADER_NAMES.value):
+            co_leader_names.append(format_co_leader_info(co_leader_name))
+        for co_leader_email in self._gen_data_list(data_object, Fields.CO_LEADER_EMAILS.value):
+            co_leader_emails.append(format_co_leader_info(co_leader_email))
 
-        if isinstance(co_leader_names[index], list) and isinstance(co_leader_emails[index], list):
-            for co_index, co_leader_name in enumerate(co_leader_names[index]):
-                groups[index]["members"][co_index + 1] = {}
-                groups[index]["members"][co_index + 1]["name"] = co_leader_name.strip()
-                groups[index]["members"][co_index + 1]["status"] = "co-leader"
-            for co_index, co_leader_email in enumerate(co_leader_emails[index]):
-                groups[index]["members"][co_index + 1]["email"] = co_leader_email.strip() if co_leader_email else None
+        co_leader_name = co_leader_names[index]
+        co_leader_email = co_leader_emails[index]
+        if isinstance(co_leader_name, list) and isinstance(co_leader_email, list):
+            for co_index, co_leader_name in enumerate(co_leader_name, 1):
+                groups[index]["members"][co_index] = {}
+                groups[index]["members"][co_index]["name"] = co_leader_name.strip()
+                groups[index]["members"][co_index]["status"] = "co-leader"
+            for co_index, co_leader_email in enumerate(co_leader_email, 1):
+                groups[index]["members"][co_index]["email"] = co_leader_email.strip()
         else:
             groups[index]["members"][1] = {
-                    "name": f"{co_leader_names[index].strip()}",
+                    "name": co_leader_name.strip(),
                     "status": "co-leader",
-                    "email": f"{co_leader_emails[index].strip()}" if co_leader_emails[index] else None,
+                    "email": co_leader_email.strip() if co_leader_email else None,
                 }
 
     def _gen_schedule_data(self, idx, groups, data_object):
@@ -140,71 +140,56 @@ class DataGenerator():
             for day in days_of_the_week:
                 if day in set_days:
                     day_string += f"{day}, "
-
-            group_days[idx] = day_string.rstrip(", ") if "," in day_string else day_string
+            group_days[idx] = day_string.rstrip(", ")
 
     def _format_group_times(self, group_times):
         for idx, time in enumerate(group_times):
-            hour = None
+            group_times[idx] = "TBD"
             time_period = "AM" if "a" in time.lower() else "PM"
             result = re.search(r'\d{2}', time)
-            all_digits = re.findall(r'\d', time)
-            if result:
-                if "1" == result.group(0)[0]:
+            all_nums = re.findall(r'\d', time)
+            hour = all_nums[0] if all_nums else None
+            if result and result.group(0) == f"{all_nums[0]}{all_nums[1]}":
+                if all_nums[0] == "1" and all_nums[1] in ["0", "1", "2"]:
                     hour = result.group(0)
-                elif "0" == result.group(0)[0] and result.group(0)[0] == all_digits[0]:
-                    hour = result.group(0)[1]
-                elif result.group(0)[0] == all_digits[0]:
-                    hour = all_digits[0]
-            if all_digits:
-                minute = "00"
-                if hour is None:
-                    hour = all_digits[0]
-                if len(all_digits) != 1:
+                elif all_nums[0] == "0":
+                    hour = all_nums[1]
+            minute = "00"
+            if all_nums:
+                if len(all_nums) > 1:
                     hour_past = False
-                    for val in all_digits:
-                        if val in ["0", "3"]:
-                            if val != hour and val != "0":
-                                minute = f"{val}0"
-                                break
-                            elif val == hour and not hour_past:
+                    for val in all_nums:
+                        if val == "3":
+                            if hour == "3" and not hour_past:
                                 hour_past = True
-                                continue
-                            elif hour_past:
-                                minute = f"{val}0"
+                            else:
+                                minute = "30"
                                 break
                 group_times[idx] = f"{hour}:{minute} {time_period}"
-            else:
-                group_times[idx] = "TBD"
 
     def _gen_address_data(self, index, groups, data_object):
         groups_meet_type = self._gen_data_list(data_object, Fields.GROUP_MEET_TYPES.value)
         groups_out_home_address = self._gen_data_list(data_object, Fields.GROUP_OUT_HOME_ADDRESSES.value)
         leader_addresses = self._gen_data_list(data_object, Fields.LEADER_ADDRESSES.value)
-        if "In Home" in groups_meet_type[index]:
-            if groups_out_home_address[index]:
-                groups[index]["address"] = groups_out_home_address[index]
-            else:
-                groups[index]["address"] = leader_addresses[index].strip("Home:/\n")
-        elif groups_meet_type[index] != "Online":
-            groups[index]["address"] = groups_out_home_address[index]
-        else:
-            groups[index]["address"] = ''
+        groups[index]["address"] = groups_out_home_address[index]
+        if "In Home" in groups_meet_type[index] and groups_out_home_address[index] == '':
+            groups[index]["address"] = leader_addresses[index].strip("Home:/\n")
         self._format_group_address(index, groups)
 
     def _format_group_address(self, index, groups):
-        if groups[index]["address"] != '':
+        if groups[index]["address"]:
             address = groups[index]["address"]
-            address_number = re.search("\d+", address.split(" ")[0])
-            if address_number is None:
-                groups[index]["address"] = ''
-            else:
+            first_address_value = address.split(" ")[0]
+            address_number = re.search("\d+", first_address_value)
+            groups[index]["address"] = ''
+            if address_number is not None:
                 groups[index]["address"] = address.replace("\n", " ")
 
     def _gen_tags_data(self, index, groups, data_object):
         group_campuses = self._gen_data_list(data_object, Fields.GROUP_CAMPUSES.value)
         group_occurences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
         group_days = self._gen_data_list(data_object, Fields.GROUP_DAYS.value)
+        self._format_group_days(group_days)
         group_genders = self._gen_data_list(data_object, Fields.GROUP_GENDERS.value)
         groups[index]["tags"] = {
             "campus": group_campuses[index],
@@ -215,7 +200,7 @@ class DataGenerator():
             "group type": self._get_types(index, data_object),
             "group age": self._get_age_range(index, data_object),
             "group members": group_genders[index],
-            "day of week": group_days[index],
+            "day of week": [group_days[index]],
         }
 
     def _get_year(self):
@@ -233,30 +218,33 @@ class DataGenerator():
         attributes = []
         groups_meet_type = self._gen_data_list(data_object, Fields.GROUP_MEET_TYPES.value)
         group_childcare = self._gen_data_list(data_object, Fields.GROUP_CHILDCARE.value)
-        if groups_meet_type[index] == "Online":
+        if "Online" in groups_meet_type[index]:
             attributes.append("Online group")
         if group_childcare[index].lower() == "yes":
             attributes.append("Childcare Available")
         return attributes
 
     def _get_types(self, index, data_object):
+        def remove_whitespace(val):
+            return val.replace(" ", "") if "/" in val else val.strip()
+
         all_group_types = self._gen_data_list(data_object, Fields.GROUP_TYPES.value)
         group_types = all_group_types[index]
+        formatted_group_types = []
         if "," in group_types:
-            group_types_list = group_types.split(",")
-            group_types = []
-            for group_type in group_types_list:
-                group_types.append(group_type.strip())
-            return group_types
-        return [group_types]
+            for group_type in group_types.split(","):
+                formatted_group_types.append(remove_whitespace(group_type))
+        else:
+            formatted_group_types.append(remove_whitespace(group_types))
+        return formatted_group_types
 
     def _get_age_range(self, index, data_object):
         all_age_ranges = self._gen_data_list(data_object, Fields.GROUP_AGE_RANGES.value)
         age_ranges = all_age_ranges[index]
+        formatted_age_ranges = []
         if "," in age_ranges:
-            age_range_list = age_ranges.split(",")
-            age_ranges = []
-            for age_range in age_range_list:
-                age_ranges.append(age_range.strip())
-            return age_ranges
-        return [age_ranges]
+            for age_range in age_ranges.split(","):
+                formatted_age_ranges.append(age_range.strip())
+        else:
+            formatted_age_ranges.append(age_ranges.strip())
+        return formatted_age_ranges

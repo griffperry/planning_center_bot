@@ -25,8 +25,7 @@ def generator():
                     }
                 }
             }
-        }
-        ),
+        }),
         (1, {
             1: {
                 'members': {
@@ -42,8 +41,7 @@ def generator():
                     },
                 }
             }
-        }
-        ),
+        }),
         (2, {
             2: {
                 'members': {
@@ -59,8 +57,7 @@ def generator():
                     }
                 }
             }
-        }
-        ),
+        }),
         (8, {
             8: {
                 'members': {
@@ -81,8 +78,7 @@ def generator():
                     }
                 }
             }
-        }
-        ),
+        }),
         (13, {
             13: {
                 'members': {
@@ -103,8 +99,7 @@ def generator():
                     }
                 }
             }
-        }
-        ),
+        }),
     ],
 )
 def test_gen_members_data(index, expected, generator: dg.DataGenerator):
@@ -169,5 +164,110 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
     groups[index] = {}
 
     generator._gen_address_data(index, groups, data_object)
+    print(groups)
+    assert groups == expected
+
+
+@pytest.mark.parametrize(
+    "index,expected",
+    [
+        (0, {
+            0: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Weekly',
+                    'group attributes': [],
+                    'group type': ['Freedom'],
+                    'group age': ['18-30'],
+                    'group members': 'Women',
+                    'day of week': ['Thursday'],
+                }
+            }
+        }),
+        (1, {
+            1: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Weekly',
+                    'group attributes': [],
+                    'group type': ['Fitness/Health'],
+                    'group age': ['18-30', '30-55', '55+'],
+                    'group members': 'Women',
+                    'day of week': ['Friday'],
+                }
+            }
+        }),
+        (2, {
+            2: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Weekly',
+                    'group attributes': [],
+                    'group type': ['Prayer', 'Fitness/Health', 'Fun/Hangout'],
+                    'group age': ['All ages welcome'],
+                    'group members': 'Men',
+                    'day of week': ['Monday, Tuesday, Wednesday, Thursday, Friday, Saturday'],
+                }
+            }
+        }),
+        (5, {
+            5: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Weekly',
+                    'group attributes': [],
+                    'group type': ['Book Study', 'Bible Study'],
+                    'group age': ['All ages welcome'],
+                    'group members': 'Co-ed (Both Men and Women welcome)',
+                    'day of week': ['Sunday'],
+                }
+            }
+        }),
+        (8, {
+            8: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Bi-weekly',
+                    'group attributes': ['Childcare Available'],
+                    'group type': ['Fun/Hangout'],
+                    'group age': ['18-30'],
+                    'group members': 'Co-ed (Both Men and Women welcome)',
+                    'day of week': ['Friday'],
+                }
+            }
+        }),
+        (9, {
+            9: {
+                'tags': {
+                    'campus': 'Madison',
+                    'year': '2023',
+                    'season': 'Fall',
+                    'regularity': 'Monthly',
+                    'group attributes': ["Online group"],
+                    'group type': ['Fun/Hangout'],
+                    'group age': ['All ages welcome'],
+                    'group members': 'Co-ed (Both Men and Women welcome)',
+                    'day of week': ['Thursday'],
+                }
+            }
+        }),
+    ],
+)
+def test_gen_tags_data(index, expected, generator: dg.DataGenerator):
+    data_object = generator.get_excel_sheet_object("test/groups2.xlsx")
+    groups = {}
+    groups[index] = {}
+
+    generator._gen_tags_data(index, groups, data_object)
     print(groups)
     assert groups == expected
