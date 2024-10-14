@@ -175,7 +175,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             0: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Weekly',
                     'group attributes': [],
@@ -190,7 +190,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             1: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Weekly',
                     'group attributes': [],
@@ -205,7 +205,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             2: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Weekly',
                     'group attributes': [],
@@ -220,7 +220,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             5: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Weekly',
                     'group attributes': [],
@@ -235,7 +235,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             8: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Bi-weekly',
                     'group attributes': ['Childcare Available'],
@@ -250,7 +250,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
             9: {
                 'tags': {
                     'campus': 'Madison',
-                    'year': '2023',
+                    'year': '2024',
                     'season': 'Fall',
                     'regularity': 'Monthly',
                     'group attributes': ["Online group"],
