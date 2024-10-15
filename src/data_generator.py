@@ -187,7 +187,8 @@ class DataGenerator():
 
     def _gen_tags_data(self, index, groups, data_object):
         group_campuses = self._gen_data_list(data_object, Fields.GROUP_CAMPUSES.value)
-        group_occurences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
+        group_occurrences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
+        formatted_regularity = [ self._format_group_occurrence(x) for x in group_occurrences ]
         group_days = self._gen_data_list(data_object, Fields.GROUP_DAYS.value)
         self._format_group_days(group_days)
         group_genders = self._gen_data_list(data_object, Fields.GROUP_GENDERS.value)
@@ -195,13 +196,29 @@ class DataGenerator():
             "campus": group_campuses[index],
             "year": self._get_year(),
             "season": self._get_season(),
-            "regularity": group_occurences[index],
+            "regularity": formatted_regularity[index],
             "group attributes": self._get_attributes(index, data_object),
             "group type": self._get_types(index, data_object),
             "group age": self._get_age_range(index, data_object),
             "group members": group_genders[index],
             "day of week": [group_days[index]],
         }
+
+
+    def _format_group_occurrence(self, occurrence):
+        if occurrence.lower() == "bi-weekly":
+            return "Every Other Week"
+        valid_occurrences = [
+                "Weekly",
+                "Monthly",
+                "Every Other Week",
+                "Twice Monthly",
+                "Varied",
+                "None",
+        ]
+        if occurrence in valid_occurrences:
+            return occurrence
+        return "None"
 
     def _get_year(self):
         return str(datetime.now().year)
