@@ -237,7 +237,7 @@ def test_gen_address_data(index, expected, generator: dg.DataGenerator):
                     'campus': 'Madison',
                     'year': '2024',
                     'season': 'Fall',
-                    'regularity': 'Bi-weekly',
+                    'regularity': 'Every Other Week',
                     'group attributes': ['Childcare Available'],
                     'group type': ['Fun/Hangout'],
                     'group age': ['18-30'],
