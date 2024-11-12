@@ -1,7 +1,9 @@
 from planning_center_backend import planning_center
 from planning_center_backend.people import PeopleQueryExpression
 from planning_center_backend import maps
+from planning_center_backend.groups import GroupEventsVisibility
 from src.status_report import StatusReport
+import warnings
 
 class GroupManager(StatusReport):
 
@@ -49,11 +51,12 @@ class GroupManager(StatusReport):
                     group_name,
                     f"(User {self.id}) Group '{group_name}' not created."
                 )
-        except:
+        except Exception as e:
             self.add_group_status(
                 group_name,
                 f"(User {self.id}) Error when creating group '{group_name}'."
             )
+            warnings.warn(f"Exception = {e}")
         self.reports.append(self.create_report(group_name))
 
     def add_group(self, group):
@@ -68,13 +71,16 @@ class GroupManager(StatusReport):
         member_name = member.get("name")
         member_status = member.get("status")
         member_email = member.get("email")
-        promote_member = "leader" in member_status
+        promote_member = notify = "leader" in member_status
         if member_name:
             qe = PeopleQueryExpression(search_name=member_name, search_name_or_email=member_email)
             if qe:
                 person_obj = self.backend.people.query(qe)
                 if len(person_obj) == 1:
-                    self.current_group.add_member(person_id=person_obj[0].id, leader=promote_member)
+                    self.current_group.add_member(person_id=person_obj[0].id,
+                                                  leader=promote_member,
+                                                  notify=notify,
+                                                )
                 else:
                     self.add_group_caveat(
                         group_name,
@@ -83,7 +89,14 @@ class GroupManager(StatusReport):
 
     def add_group_settings(self, group):
         with self.current_group.no_refresh():
+            self.current_group.leader_name_visible_on_public_page = True
+            self.current_group.events_visibility = GroupEventsVisibility.Public
+            self.current_group.publicly_display_meeting_schedule = True
+            self.current_group.leaders_can_search_people_database = False
+            self.current_group.communication_enabled = True
+            self.current_group.members_can_create_forum_topics = False
             self.add_meeting_schedule(group.get("schedule"))
+            self.current_group.schedule_parameters = group.get("meeting_settings")
             self.add_description(group.get("description"))
             self.add_group_contact_email(group.get("contact_email"))
             self.add_group_tags(group.get("tags"))
@@ -115,11 +128,12 @@ class GroupManager(StatusReport):
                     shared=False
                 )
                 self.current_group.location_id = group_location
-            except:
+            except Exception as e:
                 self.add_group_caveat(
                     group_name,
                     f"(User {self.id}) Failed to add location in group '{group_name}'."
                 )
+                warnings.warn(f"Exception = {e}")
         else:
             self.add_group_caveat(
                 group_name,

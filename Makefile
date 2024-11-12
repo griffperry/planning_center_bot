@@ -18,7 +18,7 @@ clean: install
 	python .\small_groups_manager.py delete_groups
 
 .PHONY: test
-test:
+test: install
 	pytest -vv test/ $(PYTEST_ARGS)
 
 .PHONY: executable

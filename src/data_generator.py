@@ -1,7 +1,9 @@
 import pandas as pd
 import re
 from datetime import datetime
+import datetime as dt
 from enum import Enum
+from planning_center_backend import groups as pcb_groups
 
 
 class Fields(Enum):
@@ -32,7 +34,7 @@ class DataGenerator():
         self.data = {}
         self.num_groups = 0
         self.app_run = app_run
-        self.num_test_groups = 6
+        self.num_test_groups = 1
         self.campus = "Madison"
 
     def verify_data(self, data_file):
@@ -75,7 +77,7 @@ class DataGenerator():
             self._gen_address_data(index, groups, data_object)
         for index in range(self.num_groups):
             self._gen_tags_data(index, groups, data_object)
-        self.num_groups = self.num_groups if self.app_run else self.num_test_groups
+        # self.num_groups = self.num_groups if self.app_run else self.num_test_groups
         for i in range(self.num_groups):
             self.data[i] = groups[i]
 
@@ -126,11 +128,48 @@ class DataGenerator():
 
     def _gen_schedule_data(self, idx, groups, data_object):
         group_occurrences = self._gen_data_list(data_object, Fields.GROUP_OCCURRENCES.value)
+        group_occurrences = [ x.strip() for x in group_occurrences ]
         group_days = self._gen_data_list(data_object, Fields.GROUP_DAYS.value)
         group_times = self._gen_data_list(data_object, Fields.GROUP_TIMES.value)
         self._format_group_days(group_days)
         self._format_group_times(group_times)
         groups[idx]["schedule"] = f"{group_days[idx]} @ {group_times[idx]} {group_occurrences[idx]}"
+
+        if "Monday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Monday
+        elif "Tuesday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Tuesday
+        elif "Wednesday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Wednesday
+        elif "Thursday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Thursday
+        elif "Friday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Friday
+        elif "Saturday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Saturday
+        elif "Sunday" in group_days[idx]:
+            weekday = pcb_groups.GroupMeetingWeekday.Sunday
+        else:
+            raise ValueError("Cannot parse weekday")
+
+        start = dt.datetime.strptime(group_times[idx], "%I:%M %p")
+        end = start + dt.timedelta(hours=2)
+
+        if group_occurrences[idx] == "Weekly":
+            meeting_settings = pcb_groups.GroupMeetingSettings.weekly(
+                weekday=weekday,
+                start_time=start.time(),
+                end_time=end.time(),
+            )
+        elif group_occurrences[idx] == "Bi-weekly":
+            meeting_settings = pcb_groups.GroupMeetingSettings.biweekly(
+                weekday=weekday,
+                start_time=start.time(),
+                end_time=end.time(),
+            )
+        else:
+            raise ValueError("Cannot parse meeting schedule")
+        groups[idx]["meeting_settings"] = meeting_settings
 
     def _format_group_days(self, group_days):
         for idx, set_days in enumerate(group_days):
@@ -191,7 +230,6 @@ class DataGenerator():
         formatted_regularity = [ self._format_group_occurrence(x) for x in group_occurrences ]
         group_days = self._gen_data_list(data_object, Fields.GROUP_DAYS.value)
         self._format_group_days(group_days)
-        group_genders = self._gen_data_list(data_object, Fields.GROUP_GENDERS.value)
         groups[index]["tags"] = {
             "campus": group_campuses[index],
             "year": self._get_year(),
@@ -200,10 +238,9 @@ class DataGenerator():
             "group attributes": self._get_attributes(index, data_object),
             "group type": self._get_types(index, data_object),
             "group age": self._get_age_range(index, data_object),
-            "group members": group_genders[index],
+            "group members": self._get_genders(index, data_object),
             "day of week": [group_days[index]],
         }
-
 
     def _format_group_occurrence(self, occurrence):
         if occurrence.lower() == "bi-weekly":
@@ -258,10 +295,34 @@ class DataGenerator():
     def _get_age_range(self, index, data_object):
         all_age_ranges = self._gen_data_list(data_object, Fields.GROUP_AGE_RANGES.value)
         age_ranges = all_age_ranges[index]
-        formatted_age_ranges = []
+        formatted_age_ranges = set()
         if "," in age_ranges:
             for age_range in age_ranges.split(","):
-                formatted_age_ranges.append(age_range.strip())
+                formatted_age_ranges.add(age_range.strip())
         else:
-            formatted_age_ranges.append(age_ranges.strip())
-        return formatted_age_ranges
+            formatted_age_ranges.add(age_ranges.strip())
+        if "All ages welcome" in formatted_age_ranges:
+            formatted_age_ranges.update({
+                "Under 18",
+                "18-30",
+                "31-55",
+                "55+",
+                "18 and up",
+            })
+        return list(formatted_age_ranges)
+
+    def _get_genders(self, index, data_object):
+        all_genders = self._gen_data_list(data_object, Fields.GROUP_GENDERS.value)
+        genders = all_genders[index]
+        formatted_genders = set()
+        if "," in genders:
+            for gender in genders.split(","):
+                formatted_genders.add(gender.strip())
+        else:
+            formatted_genders.add(genders.strip())
+        if "Co-ed (Men and Women welcome)" in formatted_genders:
+            formatted_genders.update({
+                "Men",
+                "Women",
+            })
+        return list(formatted_genders)
